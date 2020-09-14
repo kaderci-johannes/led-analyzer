@@ -10,7 +10,7 @@
    Implementation:
    [Notes on implementation]
 */
-// Let's try something
+//
 
 // user include files
 #include "EventFilter/HcalRawToDigi/interface/HcalUnpacker.h"
