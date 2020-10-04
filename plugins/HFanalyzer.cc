@@ -612,7 +612,7 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     if(ieta<0){
       AllSum[ieta+41][(iphi-1)/2][depth-1]->Fill(SumCharge);
       Ped[ieta+41][(iphi-1)/2][depth-1]->Fill(PedCharge);
-      Ev[ieta+41][(iphi-1)/2][depth-1].resize(2000);
+      Ev[ieta+41][(iphi-1)/2][depth-1].resize(EventNumber);
       Ev[ieta+41][(iphi-1)/2][depth-1][EventNumber-1] = PulMax;
       //stdevm[depth-1]->Fill(ieta,iphi,psd[ieta+41][(iphi-1)/2][depth-1]->GetStdDev());
       if(_verbosity)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta+41][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
@@ -620,7 +620,7 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     else{
       AllSum[ieta-16][(iphi-1)/2][depth-1]->Fill(SumCharge);
       Ped[ieta-16][(iphi-1)/2][depth-1]->Fill(PedCharge);
-      Ev[ieta-16][(iphi-1)/2][depth-1].resize(2000);
+      Ev[ieta-16][(iphi-1)/2][depth-1].resize(EventNumber);
       Ev[ieta-16][(iphi-1)/2][depth-1][EventNumber-1] = PulMax;
       //stdevp[depth-1]->Fill(ieta,iphi,psd[ieta-16][(iphi-1)/2][depth-1]->GetStdDev());
       if(_verbosity)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta-16][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
