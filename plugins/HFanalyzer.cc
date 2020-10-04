@@ -181,6 +181,8 @@ TProfile2D *stdevm[4][nD];				// An array of 2D histograms for various depths of
 TProfile2D *gainp[4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: PMT Gain
 TProfile2D *gainm[4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: PMT Gain
 
+vector<vector<vector<double>>> Ev;
+
 //TF1 *fit;					// Fit function for the pulse shape distribution.
 
 //
@@ -338,6 +340,14 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
     }
   }
 
+  Ev.resize(iETAe);
+  for(int i=0;i<iETAe;i++){
+    Ev[i].resize(iPHIe);
+    for(int j=0;j<iPHIe;j++){
+      Ev[i][j].resize(nD);
+    }
+  }
+  cout<<Ev.size()<<" "<<Ev[3].size()<<" "<<Ev[3][21].size()<<endl;
 // for histo stuff
   numChannels=0;
 }
