@@ -315,22 +315,6 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
     }
   }
 
-/*  for(int i=0;i<iETAe;i++){
-    for(int j=0;j<iPHIe;j++){
-      for(int k=0;k<nD;k++){
-        if(i<13){
-          sprintf(hName,"PeakQ_m%i_%i_%i",41-i,2*j+1,k+1);
-          sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i-41,2*j+1,k+1);
-        }
-        else{
-          sprintf(hName,"PeakQ_p%i_%i_%i",i+16,2*j+1,k+1);
-          sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
-        }
-        EvByEv[i][j][k] = new TProfile(hName,hTitle,2000,-0.5,9999.5);
-      }
-    }
-  }*/
-
   for(int j=0;j<nQ;j++){
     for(int k=0;k<nD;k++){
       sprintf(hName,"hfp_%i_%i",j+1,k+1);
@@ -377,10 +361,7 @@ HFanalyzer::~HFanalyzer()
           sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
         }
         EvByEv[i][j][k] = new TProfile(hName,hTitle,EventNumber,0.5,EventNumber+0.5);
-        EvByEv[i][j][k]->Fill(1,1);
-        EvByEv[i][j][k]->Fill(3,2);
-        EvByEv[i][j][k]->Fill(EventNumber-2,3);
-        EvByEv[i][j][k]->Fill(EventNumber,4);
+        
       }
     }
   }
