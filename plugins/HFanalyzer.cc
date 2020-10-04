@@ -181,7 +181,7 @@ TProfile2D *stdevm[4][nD];				// An array of 2D histograms for various depths of
 TProfile2D *gainp[4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: PMT Gain
 TProfile2D *gainm[4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: PMT Gain
 
-vector<vector<vector<double>>> Ev;
+vector<vector<vector<vector<double>>>> Ev;
 
 //TF1 *fit;					// Fit function for the pulse shape distribution.
 
@@ -347,7 +347,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
       Ev[i][j].resize(nD);
     }
   }
-  cout<<Ev.size()<<" "<<Ev[3].size()<<" "<<Ev[3][21].size()<<endl;
+
 // for histo stuff
   numChannels=0;
 }
@@ -371,12 +371,10 @@ HFanalyzer::~HFanalyzer()
           sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
         }
         EvByEv[i][j][k] = new TProfile(hName,hTitle,EventNumber,0.5,EventNumber+0.5);
-        
+        if(Ev[i][j][k].size()!=0) for(int l=0;l<EventNumber;l++) EvByEv[i][j][k]->Fill(l,Ev[i][j][k][l]);
       }
     }
   }
-
-  cout<<"xmax for EvByEv is: "<<EvByEv[0][0][0]->GetXaxis()->GetXmax()<<endl;
 
   for(int i=0;i<iETAe;i++){
     for(int j=0;j<iPHIe;j++){
@@ -614,14 +612,16 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     if(ieta<0){
       AllSum[ieta+41][(iphi-1)/2][depth-1]->Fill(SumCharge);
       Ped[ieta+41][(iphi-1)/2][depth-1]->Fill(PedCharge);
-      //EvByEv[ieta+41][(iphi-1)/2][depth-1]->Fill(EventNumber-1,PulMax);
+      Ev[ieta+41][(iphi-1)/2][depth-1].resize(2000);
+      Ev[ieta+41][(iphi-1)/2][depth-1][EventNumber-1] = PulMax;
       //stdevm[depth-1]->Fill(ieta,iphi,psd[ieta+41][(iphi-1)/2][depth-1]->GetStdDev());
       if(_verbosity)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta+41][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
     }
     else{
       AllSum[ieta-16][(iphi-1)/2][depth-1]->Fill(SumCharge);
       Ped[ieta-16][(iphi-1)/2][depth-1]->Fill(PedCharge);
-      //EvByEv[ieta-16][(iphi-1)/2][depth-1]->Fill(EventNumber-1,PulMax);
+      Ev[ieta-16][(iphi-1)/2][depth-1].resize(2000);
+      Ev[ieta-16][(iphi-1)/2][depth-1][EventNumber-1] = PulMax;
       //stdevp[depth-1]->Fill(ieta,iphi,psd[ieta-16][(iphi-1)/2][depth-1]->GetStdDev());
       if(_verbosity)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta-16][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
     }
