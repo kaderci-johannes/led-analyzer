@@ -235,9 +235,8 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
   _sequencer_flag(iConfig.getUntrackedParameter<int>("Sequencer_Flag"))
 { 
 
-  char hName[1024];	// Histogram name
-  char hTitle[1024];	// Histogram title
-  char dName[1024];
+  char hName[1024], hTitle[1024], dName[1024];	// Histogram name, histogram title and directory name.
+  
 
   EventNumber = 0;
 
@@ -316,7 +315,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
     }
   }
 
-  for(int i=0;i<iETAe;i++){
+/*  for(int i=0;i<iETAe;i++){
     for(int j=0;j<iPHIe;j++){
       for(int k=0;k<nD;k++){
         if(i<13){
@@ -330,7 +329,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
         EvByEv[i][j][k] = new TProfile(hName,hTitle,2000,-0.5,9999.5);
       }
     }
-  }
+  }*/
 
   for(int j=0;j<nQ;j++){
     for(int k=0;k<nD;k++){
@@ -362,9 +361,29 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
 
 HFanalyzer::~HFanalyzer()
 {
+  cout<<"N = "<<EventNumber<<endl;
   int chan=1;
   double gain;
-  char dName[1024];
+  char hName[1024], hTitle[1024], dName[1024];
+
+  for(int i=0;i<iETAe;i++){
+    for(int j=0;j<iPHIe;j++){
+      for(int k=0;k<nD;k++){
+        if(i<13){
+          sprintf(hName,"PeakQ_m%i_%i_%i",41-i,2*j+1,k+1);
+          sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i-41,2*j+1,k+1);
+        }
+        else{
+          sprintf(hName,"PeakQ_p%i_%i_%i",i+16,2*j+1,k+1);
+          sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
+        }
+        EvByEv[i][j][k] = new TProfile(hName,hTitle,EventNumber,-0.5,EventNumber-0.5);
+      }
+    }
+  }
+
+  cout<<EvByEv[0][0][0]->GetXaxis()->GetXmax();
+
   for(int i=0;i<iETAe;i++){
     for(int j=0;j<iPHIe;j++){
       for(int k=0;k<nD;k++){
@@ -551,11 +570,9 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     int iphi = hcaldetid.iphi();
     int nTS  = qie10df.samples();
 
-
     //How to extract information per time slice (nTS) and how to sum up the total charge in 10 ts
 
-    char hName[1024];
-    char hTitle[1024];
+    char hName[1024], hTitle[1024];
 
     sprintf(hTitle,"Pulse Shape Distribution (ieta: %i, iphi: %i, Depth: %i)",ieta,iphi,depth);
 
@@ -603,14 +620,14 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     if(ieta<0){
       AllSum[ieta+41][(iphi-1)/2][depth-1]->Fill(SumCharge);
       Ped[ieta+41][(iphi-1)/2][depth-1]->Fill(PedCharge);
-      EvByEv[ieta+41][(iphi-1)/2][depth-1]->Fill(EventNumber-1,PulMax);
+      //EvByEv[ieta+41][(iphi-1)/2][depth-1]->Fill(EventNumber-1,PulMax);
       //stdevm[depth-1]->Fill(ieta,iphi,psd[ieta+41][(iphi-1)/2][depth-1]->GetStdDev());
       if(_verbosity)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta+41][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
     }
     else{
       AllSum[ieta-16][(iphi-1)/2][depth-1]->Fill(SumCharge);
       Ped[ieta-16][(iphi-1)/2][depth-1]->Fill(PedCharge);
-      EvByEv[ieta-16][(iphi-1)/2][depth-1]->Fill(EventNumber-1,PulMax);
+      //EvByEv[ieta-16][(iphi-1)/2][depth-1]->Fill(EventNumber-1,PulMax);
       //stdevp[depth-1]->Fill(ieta,iphi,psd[ieta-16][(iphi-1)/2][depth-1]->GetStdDev());
       if(_verbosity)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta-16][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
     }
