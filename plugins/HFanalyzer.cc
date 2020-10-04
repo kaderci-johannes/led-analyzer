@@ -361,7 +361,6 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
 
 HFanalyzer::~HFanalyzer()
 {
-  cout<<"N = "<<EventNumber<<endl;
   int chan=1;
   double gain;
   char hName[1024], hTitle[1024], dName[1024];
@@ -377,7 +376,11 @@ HFanalyzer::~HFanalyzer()
           sprintf(hName,"PeakQ_p%i_%i_%i",i+16,2*j+1,k+1);
           sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
         }
-        EvByEv[i][j][k] = new TProfile(hName,hTitle,EventNumber,-0.5,EventNumber-0.5);
+        EvByEv[i][j][k] = new TProfile(hName,hTitle,EventNumber,0.5,EventNumber+0.5);
+        EvByEv[i][j][k]->Fill(1,1);
+        EvByEv[i][j][k]->Fill(3,2);
+        EvByEv[i][j][k]->Fill(EventNumber-2,3);
+        EvByEv[i][j][k]->Fill(EventNumber,4);
       }
     }
   }
