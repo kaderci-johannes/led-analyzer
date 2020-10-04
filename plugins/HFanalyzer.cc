@@ -382,7 +382,7 @@ HFanalyzer::~HFanalyzer()
     }
   }
 
-  cout<<EvByEv[0][0][0]->GetXaxis()->GetXmax();
+  cout<<"xmax for EvByEv is: "<<EvByEv[0][0][0]->GetXaxis()->GetXmax();
 
   for(int i=0;i<iETAe;i++){
     for(int j=0;j<iPHIe;j++){
