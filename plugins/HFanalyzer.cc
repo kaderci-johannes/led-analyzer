@@ -371,7 +371,7 @@ HFanalyzer::~HFanalyzer()
           sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
         }
         EvByEv[i][j][k] = new TProfile(hName,hTitle,EventNumber,0.5,EventNumber+0.5);
-        if(Ev[i][j][k].size()!=0) for(int l=0;l<EventNumber;l++) EvByEv[i][j][k]->Fill(l,Ev[i][j][k][l]);
+        if(Ev[i][j][k].size()!=0) for(int l=0;l<EventNumber;l++) EvByEv[i][j][k]->Fill(l+1,Ev[i][j][k][l]);
       }
     }
   }
