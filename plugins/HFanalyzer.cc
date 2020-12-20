@@ -280,44 +280,45 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
 
     for(int i=0;i<nQ;i++){
       sprintf(dName,"Q%iHFM/AllSumCh",i+1);
-      _file->mkdir(dName);
+      _file[f]->mkdir(dName);
       sprintf(dName,"Q%iHFM/Ped",i+1);
-      _file->mkdir(dName);
+      _file[f]->mkdir(dName);
       sprintf(dName,"Q%iHFM/2D",i+1);
-      _file->mkdir(dName);
+      _file[f]->mkdir(dName);
       sprintf(dName,"Q%iHFM/PSD",i+1);
-      _file->mkdir(dName);
+      _file[f]->mkdir(dName);
       sprintf(dName,"Q%iHFM/EventByEvent",i+1);
-      _file->mkdir(dName);
+      _file[f]->mkdir(dName);
       sprintf(dName,"Q%iHFP/AllSumCh",i+1);
-      _file->mkdir(dName);
+      _file[f]->mkdir(dName);
       sprintf(dName,"Q%iHFP/Ped",i+1);
-      _file->mkdir(dName);
+      _file[f]->mkdir(dName);
       sprintf(dName,"Q%iHFP/2D",i+1);
-      _file->mkdir(dName);
+      _file[f]->mkdir(dName);
       sprintf(dName,"Q%iHFP/PSD",i+1);
-      _file->mkdir(dName);
+      _file[f]->mkdir(dName);
       sprintf(dName,"Q%iHFP/EventByEvent",i+1);
-      _file->mkdir(dName);
+      _file[f]->mkdir(dName);
     }
   }
 
 
-  for(int i=0;i<iETAe;i++) for(int j=0;j<iPHIe;j++) for(int k=0;k<nD;k++) psd[i][j][k] = new TProfile;	
+  for(int f=0;f<_nsteps;f++) for(int i=0;i<iETAe;i++) for(int j=0;j<iPHIe;j++) for(int k=0;k<nD;k++) psd[f][i][j][k] = new TProfile;	
  // This is needed for the psd[i][j][k]->GetEntries() that will come up not to crash. nTS is needed to define the # of bins and the x-axis range. Therefore, the ranges, etc. of psd[i][j][k] are defined in the HFanalyzer::analyze part.
-
-  for(int i=0;i<iETAe;i++){
-    for(int j=0;j<iPHIe;j++){
-      for(int k=0;k<nD;k++){
-        if(i<13){
-          sprintf(hName,"SumCharge_m%i_%i_%i",41-i,2*j+1,k+1);
-          sprintf(hTitle,"PMT Charge (ieta: %i, iphi: %i, Depth: %i)",i-41,2*j+1,k+1);
+  for(int f=0;f<_nsteps;f++){
+    for(int i=0;i<iETAe;i++){
+      for(int j=0;j<iPHIe;j++){
+        for(int k=0;k<nD;k++){
+          if(i<13){
+            sprintf(hName,"SumCharge_m%i_%i_%i",41-i,2*j+1,k+1);
+            sprintf(hTitle,"PMT Charge (ieta: %i, iphi: %i, Depth: %i)",i-41,2*j+1,k+1);
+          }
+          else{
+            sprintf(hName,"SumCharge_p%i_%i_%i",i+16,2*j+1,k+1);
+            sprintf(hTitle,"PMT Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
+          }
+          AllSum[f][i][j][k] = new TH1F(hName,hTitle,1000,0,10000);
         }
-        else{
-          sprintf(hName,"SumCharge_p%i_%i_%i",i+16,2*j+1,k+1);
-          sprintf(hTitle,"PMT Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
-        }
-        AllSum[i][j][k] = new TH1F(hName,hTitle,1000,0,10000);
       }
     }
   }
