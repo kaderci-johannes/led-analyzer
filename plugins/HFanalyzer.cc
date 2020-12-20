@@ -245,21 +245,21 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
 
   if(_mode==4) _nsteps=_eps=1;
 
+  TH1F *AllSum[_nsteps][iETAe][iPHIe][nD];				// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (LED)
+  TH1F *Ped[_nsteps][iETAe][iPHIe][nD];				// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (Pedestal)
+  TProfile *psd[_nsteps][iETAe][iPHIe][nD];			// An array of profile histograms that contain pulse shape distributions. x axis: Time slice, y: Average ADC, y_err: STDEV ADC
+  TProfile *EvByEv[_nsteps][iETAe][iPHIe][nD];			// An array of profile histograms that contain the peak charge of each event. x axis: Event number, y: Peak charge
+  TProfile2D *hfp[_nsteps][4][nD];					// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Mean charge
+  TProfile2D *hfm[_nsteps][4][nD];					// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: Mean charge
+  TProfile2D *stdevp[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Stdev of the pulse shape distribution.
+  TProfile2D *stdevm[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: Stdev of the pulse shape distribution.
+  TProfile2D *gainp[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: PMT Gain
+  TProfile2D *gainm[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: PMT Gain
   TFile *_file[_nsteps];
+
   for(int f=0;f<_nsteps;f++){
     sprintf(dName,"%s_%i.root",_outFileName.c_str(),f);
     _file[f] = new TFile(dName, "recreate");
-
-    TH1F *AllSum[iETAe][iPHIe][nD];				// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (LED)
-    TH1F *Ped[iETAe][iPHIe][nD];				// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (Pedestal)
-    TProfile *psd[iETAe][iPHIe][nD];			// An array of profile histograms that contain pulse shape distributions. x axis: Time slice, y: Average ADC, y_err: STDEV ADC
-    TProfile *EvByEv[iETAe][iPHIe][nD];			// An array of profile histograms that contain the peak charge of each event. x axis: Event number, y: Peak charge
-    TProfile2D *hfp[4][nD];					// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Mean charge
-    TProfile2D *hfm[4][nD];					// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: Mean charge
-    TProfile2D *stdevp[4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Stdev of the pulse shape distribution.
-    TProfile2D *stdevm[4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: Stdev of the pulse shape distribution.
-    TProfile2D *gainp[4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: PMT Gain
-    TProfile2D *gainm[4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: PMT Gain
   }
 
 
