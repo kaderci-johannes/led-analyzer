@@ -8,7 +8,8 @@ process = cms.Process("ReflectionAnalysis")
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1+2*int(sys.argv[3])))
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1+2*(4==len(sys.argv[3]))))
+#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(40000))
 
 #
 #   Command Line Input(Copied from DQM for now)
@@ -23,6 +24,7 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1+2*int(sys
 #   Change the filename to process
 #
 runNumber = sys.argv[2]
+
 
 #if runNumber not in os.listdir('../img'):
 #    os.makedirs('../img/' + runNumber)
@@ -79,14 +81,20 @@ suite_code = 0
 #if len(sys.argv) > 3:
 #    suite_code = int(sys.argv[3])
 
-verbosity = int(sys.argv[3])
+verbosity = int(sys.argv[3])				# Toggle single event raw data verbose mode.
+eps = int(sys.argv[4%len(sys.argv)])			# Number of events per step.
+nsteps = int(sys.argv[5%len(sys.argv)])			# Number of steps to be processed.
+
 #sequencer_flag = int(sys.argv[3]);
 #if len(sys.argv) == 5:
 #    sequencer_flag = int(sys.argv[4])
 
 process.hcalAnalyzer = cms.EDAnalyzer('HFanalyzer',
-        OutFileName = cms.untracked.string('HFP5comm_'+runNumber+'.root'),
-        Verbosity = cms.untracked.int32(verbosity),
+        OutFileName = cms.untracked.string('HFP5comm_'+runNumber),
+	Verbosity = cms.untracked.string(verbosity),
+        Mode = cms.untracked.string(len(sys.argv)),
+	Eps = cms.untracked.int32(eps),
+	Nsteps = cms.untracked.int32(nsteps),
         Suite_Code = cms.untracked.int32(suite_code),
 	Run = cms.untracked.string(runNumber),
         Sequencer_Flag = cms.untracked.int32(0)

@@ -167,19 +167,9 @@ static const float adc2fC[128]={-0.5,0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5,9.5, 10
 
 
 
-TFile *_file;
 int EventNumber;
 
-TH1F *AllSum[iETAe][iPHIe][nD];			// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (LED)
-TH1F *Ped[iETAe][iPHIe][nD];			// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (Pedestal)
-TProfile *psd[iETAe][iPHIe][nD];		// An array of profile histograms that contain pulse shape distributions. x axis: Time slice, y: Average ADC, y_err: STDEV ADC
-TProfile *EvByEv[iETAe][iPHIe][nD];		// An array of profile histograms that contain the peak charge of each event. x axis: Event number, y: Peak charge
-TProfile2D *hfp[4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Mean charge
-TProfile2D *hfm[4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: Mean charge
-TProfile2D *stdevp[4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Stdev of the pulse shape distribution.
-TProfile2D *stdevm[4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: Stdev of the pulse shape distribution.
-TProfile2D *gainp[4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: PMT Gain
-TProfile2D *gainm[4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: PMT Gain
+
 
 vector<vector<vector<vector<double>>>> Ev;
 
@@ -203,10 +193,13 @@ private:
   virtual void endJob() ;
 
 
-  int numChannels;
+  //int numChannels;
   string _outFileName;
-  int _verbosity;
   string _run;
+  string _verbosity;
+  int _mode;
+  int _eps
+  int _nsteps
 
   virtual void beginRun(edm::Run const&, edm::EventSetup const&);
   virtual void endRun(edm::Run const&, edm::EventSetup const&);
@@ -232,55 +225,83 @@ private:
 
 HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
   _outFileName(iConfig.getUntrackedParameter<string>("OutFileName")),
-  _verbosity(iConfig.getUntrackedParameter<int>("Verbosity")),
+  _verbosity(iConfig.getUntrackedParameter<string>("Verbosity")),		// Toggle single event raw data verbose mode.
+  _mode(iConfig.getUntrackedParameter<string>("Mode")),				// == len(sys.argv)
   _run(iConfig.getUntrackedParameter<string>("Run")),
+  _eps(iConfig.getUntrackedParameter<int>("Eps")),				// Number of events per step.
+  _nsteps(iConfig.getUntrackedParameter<int>("Nsteps")),			// Number of steps to be processed.
   _sequencer_flag(iConfig.getUntrackedParameter<int>("Sequencer_Flag"))
 { 
+
+  if(_verbosity == "h") {
+    cout<<"- OPTIONS -\nhelp: Display this message.\n\nExiting"<<endl;
+    exit(0);
+  }
 
   char hName[1024], hTitle[1024], dName[1024];	// Histogram name, histogram title and directory name.
   
 
   EventNumber = 0;
 
-  _file = new TFile(_outFileName.c_str(), "recreate");
+  if(_mode==4) _nsteps=_eps=1;
 
-  _file->cd();
+  TFile *_file[_nsteps];
+  for(int f=0;f<_nsteps;f++){
+    sprintf(dName,"%s_%i.root",_outFileName.c_str(),f);
+    _file[f] = new TFile(dName, "recreate");
+
+    TH1F *AllSum[iETAe][iPHIe][nD];				// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (LED)
+    TH1F *Ped[iETAe][iPHIe][nD];				// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (Pedestal)
+    TProfile *psd[iETAe][iPHIe][nD];			// An array of profile histograms that contain pulse shape distributions. x axis: Time slice, y: Average ADC, y_err: STDEV ADC
+    TProfile *EvByEv[iETAe][iPHIe][nD];			// An array of profile histograms that contain the peak charge of each event. x axis: Event number, y: Peak charge
+    TProfile2D *hfp[4][nD];					// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Mean charge
+    TProfile2D *hfm[4][nD];					// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: Mean charge
+    TProfile2D *stdevp[4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Stdev of the pulse shape distribution.
+    TProfile2D *stdevm[4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: Stdev of the pulse shape distribution.
+    TProfile2D *gainp[4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: PMT Gain
+    TProfile2D *gainm[4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: PMT Gain
+  }
 
 
   tok_QIE10DigiCollection_ = consumes<HcalDataFrameContainer<QIE10DataFrame> >(edm::InputTag("hcalDigis"));
   hf_token = consumes<HFDigiCollection>(edm::InputTag("hcalDigis"));
   raw_token = consumes<FEDRawDataCollection>(edm::InputTag("source")); //Slow data
 
-  _file->mkdir("Q1HFM");
-  _file->mkdir("Q2HFM");
-  _file->mkdir("Q3HFM");
-  _file->mkdir("Q4HFM");
-  _file->mkdir("Q1HFP");
-  _file->mkdir("Q2HFP");
-  _file->mkdir("Q3HFP");
-  _file->mkdir("Q4HFP");
-  for(int i=0;i<nQ;i++){
-    sprintf(dName,"Q%iHFM/AllSumCh",i+1);
-    _file->mkdir(dName);
-    sprintf(dName,"Q%iHFM/Ped",i+1);
-    _file->mkdir(dName);
-    sprintf(dName,"Q%iHFM/2D",i+1);
-    _file->mkdir(dName);
-    sprintf(dName,"Q%iHFM/PSD",i+1);
-    _file->mkdir(dName);
-    sprintf(dName,"Q%iHFM/EventByEvent",i+1);
-    _file->mkdir(dName);
-    sprintf(dName,"Q%iHFP/AllSumCh",i+1);
-    _file->mkdir(dName);
-    sprintf(dName,"Q%iHFP/Ped",i+1);
-    _file->mkdir(dName);
-    sprintf(dName,"Q%iHFP/2D",i+1);
-    _file->mkdir(dName);
-    sprintf(dName,"Q%iHFP/PSD",i+1);
-    _file->mkdir(dName);
-    sprintf(dName,"Q%iHFP/EventByEvent",i+1);
-    _file->mkdir(dName);
+  for(int f=0;f<_nsteps;f++){
+    _file[f]->cd();
+    _file[f]->mkdir("Q1HFM");
+    _file[f]->mkdir("Q2HFM");
+    _file[f]->mkdir("Q3HFM");
+    _file[f]->mkdir("Q4HFM");
+    _file[f]->mkdir("Q1HFP");
+    _file[f]->mkdir("Q2HFP");
+    _file[f]->mkdir("Q3HFP");
+    _file[f]->mkdir("Q4HFP");
+
+    for(int i=0;i<nQ;i++){
+      sprintf(dName,"Q%iHFM/AllSumCh",i+1);
+      _file->mkdir(dName);
+      sprintf(dName,"Q%iHFM/Ped",i+1);
+      _file->mkdir(dName);
+      sprintf(dName,"Q%iHFM/2D",i+1);
+      _file->mkdir(dName);
+      sprintf(dName,"Q%iHFM/PSD",i+1);
+      _file->mkdir(dName);
+      sprintf(dName,"Q%iHFM/EventByEvent",i+1);
+      _file->mkdir(dName);
+      sprintf(dName,"Q%iHFP/AllSumCh",i+1);
+      _file->mkdir(dName);
+      sprintf(dName,"Q%iHFP/Ped",i+1);
+      _file->mkdir(dName);
+      sprintf(dName,"Q%iHFP/2D",i+1);
+      _file->mkdir(dName);
+      sprintf(dName,"Q%iHFP/PSD",i+1);
+      _file->mkdir(dName);
+      sprintf(dName,"Q%iHFP/EventByEvent",i+1);
+      _file->mkdir(dName);
+    }
   }
+
 
   for(int i=0;i<iETAe;i++) for(int j=0;j<iPHIe;j++) for(int k=0;k<nD;k++) psd[i][j][k] = new TProfile;	
  // This is needed for the psd[i][j][k]->GetEntries() that will come up not to crash. nTS is needed to define the # of bins and the x-axis range. Therefore, the ranges, etc. of psd[i][j][k] are defined in the HFanalyzer::analyze part.
@@ -422,7 +443,7 @@ HFanalyzer::~HFanalyzer()
             gainp[j/9][k]->Fill(i+16,2*j+1,gain);
             //stdevp[k]->Fill(i+16,2*j+1,fit->GetParameter("Sigma"));
           }
-          if(_verbosity) cout<<chan<<endl;
+          if(_mode.length() == 4) cout<<chan<<endl;
           chan++;
         }
       }
@@ -615,7 +636,7 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       Ev[ieta+41][(iphi-1)/2][depth-1].resize(EventNumber);
       Ev[ieta+41][(iphi-1)/2][depth-1][EventNumber-1] = PulMax;
       //stdevm[depth-1]->Fill(ieta,iphi,psd[ieta+41][(iphi-1)/2][depth-1]->GetStdDev());
-      if(_verbosity)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta+41][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
+      if(_mode.length() == 4)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta+41][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
     }
     else{
       AllSum[ieta-16][(iphi-1)/2][depth-1]->Fill(SumCharge);
@@ -623,7 +644,7 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       Ev[ieta-16][(iphi-1)/2][depth-1].resize(EventNumber);
       Ev[ieta-16][(iphi-1)/2][depth-1][EventNumber-1] = PulMax;
       //stdevp[depth-1]->Fill(ieta,iphi,psd[ieta-16][(iphi-1)/2][depth-1]->GetStdDev());
-      if(_verbosity)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta-16][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
+      if(_mode.length() == 4)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta-16][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
     }
   
   }
