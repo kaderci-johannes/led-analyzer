@@ -245,12 +245,12 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
 
   if(_mode==4) _nsteps=_eps=1;
 
-  TH1F *AllSum[_nsteps][iETAe][iPHIe][nD];				// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (LED)
+  TH1F *AllSum[_nsteps][iETAe][iPHIe][nD];			// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (LED)
   TH1F *Ped[_nsteps][iETAe][iPHIe][nD];				// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (Pedestal)
   TProfile *psd[_nsteps][iETAe][iPHIe][nD];			// An array of profile histograms that contain pulse shape distributions. x axis: Time slice, y: Average ADC, y_err: STDEV ADC
   TProfile *EvByEv[_nsteps][iETAe][iPHIe][nD];			// An array of profile histograms that contain the peak charge of each event. x axis: Event number, y: Peak charge
-  TProfile2D *hfp[_nsteps][4][nD];					// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Mean charge
-  TProfile2D *hfm[_nsteps][4][nD];					// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: Mean charge
+  TProfile2D *hfp[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Mean charge
+  TProfile2D *hfm[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: Mean charge
   TProfile2D *stdevp[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Stdev of the pulse shape distribution.
   TProfile2D *stdevm[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: Stdev of the pulse shape distribution.
   TProfile2D *gainp[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: PMT Gain
@@ -323,42 +323,46 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
     }
   }
 
-  for(int i=0;i<iETAe;i++){
-    for(int j=0;j<iPHIe;j++){
-      for(int k=0;k<nD;k++){
-        if(i<13){
-          sprintf(hName,"Ped_m%i_%i_%i",41-i,2*j+1,k+1);
-          sprintf(hTitle,"Pedestal (ieta: %i, iphi: %i, Depth: %i)",i-41,2*j+1,k+1);
+  for(int f=0;f<_nsteps;f++){
+    for(int i=0;i<iETAe;i++){
+      for(int j=0;j<iPHIe;j++){
+        for(int k=0;k<nD;k++){
+          if(i<13){
+            sprintf(hName,"Ped_m%i_%i_%i",41-i,2*j+1,k+1);
+            sprintf(hTitle,"Pedestal (ieta: %i, iphi: %i, Depth: %i)",i-41,2*j+1,k+1);
+          }
+          else{
+            sprintf(hName,"Ped_p%i_%i_%i",i+16,2*j+1,k+1);
+            sprintf(hTitle,"Pedestal (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
+          }
+          Ped[i][j][k] = new TH1F(hName,hTitle,100,0,1000);
         }
-        else{
-          sprintf(hName,"Ped_p%i_%i_%i",i+16,2*j+1,k+1);
-          sprintf(hTitle,"Pedestal (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
-        }
-        Ped[i][j][k] = new TH1F(hName,hTitle,100,0,1000);
       }
     }
   }
 
-  for(int j=0;j<nQ;j++){
-    for(int k=0;k<nD;k++){
-      sprintf(hName,"hfp_%i_%i",j+1,k+1);
-      sprintf(hTitle,"PMT Mean Charge (HF+ Quadrant %i Depth %i)",j+1,k+1);
-      hfp[j][k] = new TProfile2D(hName,hTitle,13,28.5,41.5,9,j*18,(j+1)*18);
-      sprintf(hName,"hfm_%i_%i",j+1,k+1);
-      sprintf(hTitle,"PMT Mean Charge (HF- Quadrant %i Depth %i)",j+1,k+1);
-      hfm[j][k] = new TProfile2D(hName,hTitle,13,-41.5,-28.5,9,j*18,(j+1)*18);
-      sprintf(hName,"stdevp_%i_%i",j+1,k+1);
-      sprintf(hTitle,"Stdev of the PMT Charge (HF+ Quadrant %i Depth %i)",j+1,k+1);
-      stdevp[j][k] = new TProfile2D(hName,hTitle,13,28.5,41.5,9,j*18,(j+1)*18);
-      sprintf(hName,"stdevm_%i_%i",j+1,k+1);
-      sprintf(hTitle,"Stdev of the PMT Charge (HF- Quadrant %i Depth %i)",j+1,k+1);
-      stdevm[j][k] = new TProfile2D(hName,hTitle,13,-41.5,-28.5,9,j*18,(j+1)*18);
-      sprintf(hName,"gainp_%i_%i",j+1,k+1);
-      sprintf(hTitle,"PMT Gains (HF+ Quadrant %i Depth %i)",j+1,k+1);
-      gainp[j][k] = new TProfile2D(hName,hTitle,13,28.5,41.5,9,j*18,(j+1)*18);
-      sprintf(hName,"gainm_%i_%i",j+1,k+1);
-      sprintf(hTitle,"PMT Gains (HF- Quadrant %i Depth %i)",j+1,k+1);
-      gainm[j][k] = new TProfile2D(hName,hTitle,13,-41.5,-28.5,9,j*18,(j+1)*18);
+  for(int f=0;f<_nsteps;f++){
+    for(int j=0;j<nQ;j++){
+      for(int k=0;k<nD;k++){
+        sprintf(hName,"hfp_%i_%i",j+1,k+1);
+        sprintf(hTitle,"PMT Mean Charge (HF+ Quadrant %i Depth %i)",j+1,k+1);
+        hfp[j][k] = new TProfile2D(hName,hTitle,13,28.5,41.5,9,j*18,(j+1)*18);
+        sprintf(hName,"hfm_%i_%i",j+1,k+1);
+        sprintf(hTitle,"PMT Mean Charge (HF- Quadrant %i Depth %i)",j+1,k+1);
+        hfm[j][k] = new TProfile2D(hName,hTitle,13,-41.5,-28.5,9,j*18,(j+1)*18);
+        sprintf(hName,"stdevp_%i_%i",j+1,k+1);
+        sprintf(hTitle,"Stdev of the PMT Charge (HF+ Quadrant %i Depth %i)",j+1,k+1);
+        stdevp[j][k] = new TProfile2D(hName,hTitle,13,28.5,41.5,9,j*18,(j+1)*18);
+        sprintf(hName,"stdevm_%i_%i",j+1,k+1);
+        sprintf(hTitle,"Stdev of the PMT Charge (HF- Quadrant %i Depth %i)",j+1,k+1);
+        stdevm[j][k] = new TProfile2D(hName,hTitle,13,-41.5,-28.5,9,j*18,(j+1)*18);
+        sprintf(hName,"gainp_%i_%i",j+1,k+1);
+        sprintf(hTitle,"PMT Gains (HF+ Quadrant %i Depth %i)",j+1,k+1);
+        gainp[j][k] = new TProfile2D(hName,hTitle,13,28.5,41.5,9,j*18,(j+1)*18);
+        sprintf(hName,"gainm_%i_%i",j+1,k+1);
+        sprintf(hTitle,"PMT Gains (HF- Quadrant %i Depth %i)",j+1,k+1);
+        gainm[j][k] = new TProfile2D(hName,hTitle,13,-41.5,-28.5,9,j*18,(j+1)*18);
+      }
     }
   }
 
