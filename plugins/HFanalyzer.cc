@@ -335,7 +335,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
             sprintf(hName,"Ped_p%i_%i_%i",i+16,2*j+1,k+1);
             sprintf(hTitle,"Pedestal (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
           }
-          Ped[i][j][k] = new TH1F(hName,hTitle,100,0,1000);
+          Ped[f][i][j][k] = new TH1F(hName,hTitle,100,0,1000);
         }
       }
     }
@@ -346,22 +346,22 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
       for(int k=0;k<nD;k++){
         sprintf(hName,"hfp_%i_%i",j+1,k+1);
         sprintf(hTitle,"PMT Mean Charge (HF+ Quadrant %i Depth %i)",j+1,k+1);
-        hfp[j][k] = new TProfile2D(hName,hTitle,13,28.5,41.5,9,j*18,(j+1)*18);
+        hfp[f][j][k] = new TProfile2D(hName,hTitle,13,28.5,41.5,9,j*18,(j+1)*18);
         sprintf(hName,"hfm_%i_%i",j+1,k+1);
         sprintf(hTitle,"PMT Mean Charge (HF- Quadrant %i Depth %i)",j+1,k+1);
-        hfm[j][k] = new TProfile2D(hName,hTitle,13,-41.5,-28.5,9,j*18,(j+1)*18);
+        hfm[f][j][k] = new TProfile2D(hName,hTitle,13,-41.5,-28.5,9,j*18,(j+1)*18);
         sprintf(hName,"stdevp_%i_%i",j+1,k+1);
         sprintf(hTitle,"Stdev of the PMT Charge (HF+ Quadrant %i Depth %i)",j+1,k+1);
-        stdevp[j][k] = new TProfile2D(hName,hTitle,13,28.5,41.5,9,j*18,(j+1)*18);
+        stdevp[f][j][k] = new TProfile2D(hName,hTitle,13,28.5,41.5,9,j*18,(j+1)*18);
         sprintf(hName,"stdevm_%i_%i",j+1,k+1);
         sprintf(hTitle,"Stdev of the PMT Charge (HF- Quadrant %i Depth %i)",j+1,k+1);
-        stdevm[j][k] = new TProfile2D(hName,hTitle,13,-41.5,-28.5,9,j*18,(j+1)*18);
+        stdevm[f][j][k] = new TProfile2D(hName,hTitle,13,-41.5,-28.5,9,j*18,(j+1)*18);
         sprintf(hName,"gainp_%i_%i",j+1,k+1);
         sprintf(hTitle,"PMT Gains (HF+ Quadrant %i Depth %i)",j+1,k+1);
-        gainp[j][k] = new TProfile2D(hName,hTitle,13,28.5,41.5,9,j*18,(j+1)*18);
+        gainp[f][j][k] = new TProfile2D(hName,hTitle,13,28.5,41.5,9,j*18,(j+1)*18);
         sprintf(hName,"gainm_%i_%i",j+1,k+1);
         sprintf(hTitle,"PMT Gains (HF- Quadrant %i Depth %i)",j+1,k+1);
-        gainm[j][k] = new TProfile2D(hName,hTitle,13,-41.5,-28.5,9,j*18,(j+1)*18);
+        gainm[f][j][k] = new TProfile2D(hName,hTitle,13,-41.5,-28.5,9,j*18,(j+1)*18);
       }
     }
   }
@@ -385,159 +385,168 @@ HFanalyzer::~HFanalyzer()
   double gain;
   char hName[1024], hTitle[1024], dName[1024];
 
-  for(int i=0;i<iETAe;i++){
-    for(int j=0;j<iPHIe;j++){
-      for(int k=0;k<nD;k++){
-        if(i<13){
-          sprintf(hName,"PeakQ_m%i_%i_%i",41-i,2*j+1,k+1);
-          sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i-41,2*j+1,k+1);
-        }
-        else{
-          sprintf(hName,"PeakQ_p%i_%i_%i",i+16,2*j+1,k+1);
-          sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
-        }
-        EvByEv[i][j][k] = new TProfile(hName,hTitle,EventNumber,0.5,EventNumber+0.5);
-        if(Ev[i][j][k].size()!=0) for(int l=0;l<EventNumber;l++) EvByEv[i][j][k]->Fill(l+1,Ev[i][j][k][l]);
-      }
-    }
-  }
-
-  for(int i=0;i<iETAe;i++){
-    for(int j=0;j<iPHIe;j++){
-      for(int k=0;k<nD;k++){
-        if(AllSum[i][j][k]->GetEntries()!=0){
-          if(i<13) {sprintf(dName,"Q%iHFM/AllSumCh",j/9+1);}
-          else {sprintf(dName,"Q%iHFP/AllSumCh",j/9+1);}
-          _file->cd(dName);
-          AllSum[i][j][k]->SetXTitle("Charge (fC)");
-          AllSum[i][j][k]->SetYTitle("Counts");
-          AllSum[i][j][k]->SetMinimum(0.);
-          AllSum[i][j][k]->Write();
-          if(i<13) {sprintf(dName,"Q%iHFM/Ped",j/9+1);}
-          else {sprintf(dName,"Q%iHFP/Ped",j/9+1);}
-          _file->cd(dName);
-          Ped[i][j][k]->SetXTitle("Charge (fC)");
-          Ped[i][j][k]->SetYTitle("Counts");
-          Ped[i][j][k]->SetMinimum(0.);
-          Ped[i][j][k]->Write();
-          if(i<13) {sprintf(dName,"Q%iHFM/PSD",j/9+1);}
-          else {sprintf(dName,"Q%iHFP/PSD",j/9+1);}
-          _file->cd(dName);
-          psd[i][j][k]->SetXTitle("TS");
-          psd[i][j][k]->SetYTitle("Mean ADC");
-          psd[i][j][k]->SetMinimum(0.);
-          psd[i][j][k]->Write();
-          if(i<13) {sprintf(dName,"Q%iHFM/EventByEvent",j/9+1);}
-          else {sprintf(dName,"Q%iHFP/EventByEvent",j/9+1);}
-          _file->cd(dName);
-          EvByEv[i][j][k]->SetXTitle("Event");
-          EvByEv[i][j][k]->SetYTitle("Peak Charge (fC)");
-          EvByEv[i][j][k]->SetMinimum(0.);
-          EvByEv[i][j][k]->Write();
-          //fit = new TF1("fit","gaus",-20.,20.);
-          //psd[i][j][k]->Fit("fit","Q");
-          gain = AllSum[i][j][k]->GetMean()/(1.05*1.602e-4*Ped[i][j][k]->GetMean()*Ped[i][j][k]->GetMean()/(Ped[i][j][k]->GetStdDev()*Ped[i][j][k]->GetStdDev()));
+  for(int f=0;f<_nsteps;f++){		///////////////////////////////// shouldn't fill like this /////////////////////////////////////////
+    for(int i=0;i<iETAe;i++){
+      for(int j=0;j<iPHIe;j++){
+        for(int k=0;k<nD;k++){
           if(i<13){
-            hfm[j/9][k]->Fill(i-41,2*j+1,AllSum[i][j][k]->GetMean());
-            stdevm[j/9][k]->Fill(i-41,2*j+1,AllSum[i][j][k]->GetStdDev());
-            gainm[j/9][k]->Fill(i-41,2*j+1,gain);
+            sprintf(hName,"PeakQ_m%i_%i_%i",41-i,2*j+1,k+1);
+            sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i-41,2*j+1,k+1);
           }
           else{
-            hfp[j/9][k]->Fill(i+16,2*j+1,AllSum[i][j][k]->GetMean());
-            stdevp[j/9][k]->Fill(i+16,2*j+1,AllSum[i][j][k]->GetStdDev());
-            gainp[j/9][k]->Fill(i+16,2*j+1,gain);
-            //stdevp[k]->Fill(i+16,2*j+1,fit->GetParameter("Sigma"));
+            sprintf(hName,"PeakQ_p%i_%i_%i",i+16,2*j+1,k+1);
+            sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
           }
-          if(_mode.length() == 4) cout<<chan<<endl;
-          chan++;
+          EvByEv[f][i][j][k] = new TProfile(hName,hTitle,EventNumber,0.5,EventNumber+0.5);
+          if(Ev[f][i][j][k].size()!=0) for(int l=0;l<EventNumber;l++) EvByEv[f][i][j][k]->Fill(l+1,Ev[i][j][k][l]);
+        }
+      }
+    }
+  }					/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  for(int f=0;f<_nsteps;f++){
+    for(int i=0;i<iETAe;i++){
+      for(int j=0;j<iPHIe;j++){
+        for(int k=0;k<nD;k++){
+          if(AllSum[i][j][k]->GetEntries()!=0){
+            if(i<13) {sprintf(dName,"Q%iHFM/AllSumCh",j/9+1);}
+            else {sprintf(dName,"Q%iHFP/AllSumCh",j/9+1);}
+            _file->cd(dName);
+            AllSum[f][i][j][k]->SetXTitle("Charge (fC)");
+            AllSum[f][i][j][k]->SetYTitle("Counts");
+            AllSum[f][i][j][k]->SetMinimum(0.);
+            AllSum[f][i][j][k]->Write();
+            if(i<13) {sprintf(dName,"Q%iHFM/Ped",j/9+1);}
+            else {sprintf(dName,"Q%iHFP/Ped",j/9+1);}
+            _file->cd(dName);
+            Ped[f][i][j][k]->SetXTitle("Charge (fC)");
+            Ped[f][i][j][k]->SetYTitle("Counts");
+            Ped[f][i][j][k]->SetMinimum(0.);
+            Ped[f][i][j][k]->Write();
+            if(i<13) {sprintf(dName,"Q%iHFM/PSD",j/9+1);}
+            else {sprintf(dName,"Q%iHFP/PSD",j/9+1);}
+            _file->cd(dName);
+            psd[f][i][j][k]->SetXTitle("TS");
+            psd[f][i][j][k]->SetYTitle("Mean ADC");
+            psd[f][i][j][k]->SetMinimum(0.);
+            psd[f][i][j][k]->Write();
+            if(i<13) {sprintf(dName,"Q%iHFM/EventByEvent",j/9+1);}
+            else {sprintf(dName,"Q%iHFP/EventByEvent",j/9+1);}
+            _file->cd(dName);
+            EvByEv[f][i][j][k]->SetXTitle("Event");
+            EvByEv[f][i][j][k]->SetYTitle("Peak Charge (fC)");
+            EvByEv[f][i][j][k]->SetMinimum(0.);
+            EvByEv[f][i][j][k]->Write();
+            //fit = new TF1("fit","gaus",-20.,20.);
+            //psd[i][j][k]->Fit("fit","Q");
+            gain = AllSum[i][j][k]->GetMean()/(1.05*1.602e-4*Ped[i][j][k]->GetMean()*Ped[i][j][k]->GetMean()/(Ped[i][j][k]->GetStdDev()*Ped[i][j][k]->GetStdDev()));
+            if(i<13){
+              hfm[f][j/9][k]->Fill(i-41,2*j+1,AllSum[i][j][k]->GetMean());
+              stdevm[f][j/9][k]->Fill(i-41,2*j+1,AllSum[i][j][k]->GetStdDev());
+              gainm[f][j/9][k]->Fill(i-41,2*j+1,gain);
+            }
+            else{
+              hfp[f][j/9][k]->Fill(i+16,2*j+1,AllSum[i][j][k]->GetMean());
+              stdevp[f][j/9][k]->Fill(i+16,2*j+1,AllSum[i][j][k]->GetStdDev());
+              gainp[f][j/9][k]->Fill(i+16,2*j+1,gain);
+              //stdevp[k]->Fill(i+16,2*j+1,fit->GetParameter("Sigma"));
+            }
+            if(_verbosity == "v") cout<<chan<<endl;
+            chan++;
+          }
         }
       }
     }
   }
 
-  for(int j=0;j<nQ;j++){
-    for(int k=0;k<nD;k++){
-      sprintf(dName,"Q%iHFP/2D",j+1);
-      _file->cd(dName);
-      hfp[j][k]->SetStats(0);
-      hfp[j][k]->SetXTitle("ieta");
-      hfp[j][k]->SetYTitle("iphi");
-      hfp[j][k]->SetZTitle("Mean Charge (fC)");
-      hfp[j][k]->Write();
-      sprintf(dName,"Q%iHFM/2D",j+1);
-      _file->cd(dName);
-      hfm[j][k]->SetStats(0);
-      hfm[j][k]->SetXTitle("ieta");
-      hfm[j][k]->SetYTitle("iphi");
-      hfm[j][k]->SetZTitle("Mean Charge (fC)");
-      hfm[j][k]->Write();
-    }
+  for(int f=0;f<_nsteps;f++){
+    for(int j=0;j<nQ;j++){
+      for(int k=0;k<nD;k++){
+        sprintf(dName,"Q%iHFP/2D",j+1);
+        _file->cd(dName);
+        hfp[f][j][k]->SetStats(0);
+        hfp[f][j][k]->SetXTitle("ieta");
+        hfp[f][j][k]->SetYTitle("iphi");
+        hfp[f][j][k]->SetZTitle("Mean Charge (fC)");
+        hfp[f][j][k]->Write();
+        sprintf(dName,"Q%iHFM/2D",j+1);
+        _file->cd(dName);
+        hfm[f][j][k]->SetStats(0);
+        hfm[f][j][k]->SetXTitle("ieta");
+        hfm[f][j][k]->SetYTitle("iphi");
+        hfm[f][j][k]->SetZTitle("Mean Charge (fC)");
+        hfm[f][j][k]->Write();
+      }
 
-    for(int k=0;k<nD;k++){
-      sprintf(dName,"Q%iHFP/2D",j+1);
-      _file->cd(dName);
-      stdevp[j][k]->SetStats(0);
-      stdevp[j][k]->SetXTitle("ieta");
-      stdevp[j][k]->SetYTitle("iphi");
-      stdevp[j][k]->SetZTitle("#sigma_{TS}");
-      stdevp[j][k]->Write();
-      sprintf(dName,"Q%iHFM/2D",j+1);
-      _file->cd(dName);
-      stdevm[j][k]->SetStats(0);
-      stdevm[j][k]->SetXTitle("ieta");
-      stdevm[j][k]->SetYTitle("iphi");
-      stdevm[j][k]->SetZTitle("#sigma_{TS}");
-      stdevm[j][k]->Write();
-    }
+      for(int k=0;k<nD;k++){
+        sprintf(dName,"Q%iHFP/2D",j+1);
+        _file->cd(dName);
+        stdevp[f][j][k]->SetStats(0);
+        stdevp[f][j][k]->SetXTitle("ieta");
+        stdevp[f][j][k]->SetYTitle("iphi");
+        stdevp[f][j][k]->SetZTitle("#sigma_{TS}");
+        stdevp[f][j][k]->Write();
+        sprintf(dName,"Q%iHFM/2D",j+1);
+        _file->cd(dName);
+        stdevm[f][j][k]->SetStats(0);
+        stdevm[f][j][k]->SetXTitle("ieta");
+        stdevm[f][j][k]->SetYTitle("iphi");
+        stdevm[f][j][k]->SetZTitle("#sigma_{TS}");
+        stdevm[f][j][k]->Write();
+      }
 
-    for(int k=0;k<nD;k++){
-      sprintf(dName,"Q%iHFP/2D",j+1);
-      _file->cd(dName);
-      gainp[j][k]->SetStats(0);
-      gainp[j][k]->SetXTitle("ieta");
-      gainp[j][k]->SetYTitle("iphi");
-      gainp[j][k]->SetZTitle("#sigma_{TS}");
-      gainp[j][k]->Write();
-      sprintf(dName,"Q%iHFM/2D",j+1);
-      _file->cd(dName);
-      gainm[j][k]->SetStats(0);
-      gainm[j][k]->SetXTitle("ieta");
-      gainm[j][k]->SetYTitle("iphi");
-      gainm[j][k]->SetZTitle("#sigma_{TS}");
-      gainm[j][k]->Write();
+      for(int k=0;k<nD;k++){
+        sprintf(dName,"Q%iHFP/2D",j+1);
+        _file->cd(dName);
+        gainp[f][j][k]->SetStats(0);
+        gainp[f][j][k]->SetXTitle("ieta");
+        gainp[f][j][k]->SetYTitle("iphi");
+        gainp[f][j][k]->SetZTitle("#sigma_{TS}");
+        gainp[f][j][k]->Write();
+        sprintf(dName,"Q%iHFM/2D",j+1);
+        _file->cd(dName);
+        gainm[f][j][k]->SetStats(0);
+        gainm[f][j][k]->SetXTitle("ieta");
+        gainm[f][j][k]->SetYTitle("iphi");
+        gainm[f][j][k]->SetZTitle("#sigma_{TS}");
+        gainm[f][j][k]->Write();
+      }
     }
   }
 
   //gROOT->SetBatch(kTRUE);
-  system("mkdir -p Results/mean/p Results/mean/m Results/stdev/p Results/stdev/m Results/gain/p Results/gain/m");
-  TCanvas *c1 = new TCanvas;
-  c1->cd();
-  for(int j=0;j<nQ;j++){
-    for(int k=0;k<nD;k++){
-      hfp[j][k]->Draw("colz");
-      sprintf(dName,"./Results/mean/p/%i_mean_p_q%i_d%i.png",stoi(_run),j+1,k+1);
-      c1->SaveAs(dName);
-      c1->Clear();
-      hfm[j][k]->Draw("colz");
-      sprintf(dName,"./Results/mean/m/%i_mean_m_q%i_d%i.png",stoi(_run),j+1,k+1);
-      c1->SaveAs(dName);
-      c1->Clear();
-      stdevp[j][k]->Draw("colz");
-      sprintf(dName,"./Results/stdev/p/%i_stdev_p_q%i_d%i.png",stoi(_run),j+1,k+1);
-      c1->SaveAs(dName);
-      c1->Clear();
-      stdevm[j][k]->Draw("colz");
-      sprintf(dName,"./Results/stdev/m/%i_stdev_m_q%i_d%i.png",stoi(_run),j+1,k+1);
-      c1->SaveAs(dName);
-      c1->Clear();
-      gainp[j][k]->Draw("colz");
-      sprintf(dName,"./Results/gain/p/%i_gain_p_q%i_d%i.png",stoi(_run),j+1,k+1);
-      c1->SaveAs(dName);
-      c1->Clear();
-      gainm[j][k]->Draw("colz");
-      sprintf(dName,"./Results/gain/m/%i_gain_m_q%i_d%i.png",stoi(_run),j+1,k+1);
-      c1->SaveAs(dName);
-      c1->Clear();
+
+  for(int f=0;f<_nsteps;f++){
+    system("mkdir -p Results/mean/p Results/mean/m Results/stdev/p Results/stdev/m Results/gain/p Results/gain/m");
+    TCanvas *c1 = new TCanvas;
+    c1->cd();
+    for(int j=0;j<nQ;j++){
+      for(int k=0;k<nD;k++){
+        hfp[j][k]->Draw("colz");
+        sprintf(dName,"./Results/mean/p/%i_%i_mean_p_q%i_d%i.png",f,stoi(_run),j+1,k+1);
+        c1->SaveAs(dName);
+        c1->Clear();
+        hfm[j][k]->Draw("colz");
+        sprintf(dName,"./Results/mean/m/%i_%i_mean_m_q%i_d%i.png",f,stoi(_run),j+1,k+1);
+        c1->SaveAs(dName);
+        c1->Clear();
+        stdevp[j][k]->Draw("colz");
+        sprintf(dName,"./Results/stdev/p/%i_%i_stdev_p_q%i_d%i.png",f,stoi(_run),j+1,k+1);
+        c1->SaveAs(dName);
+        c1->Clear();
+        stdevm[j][k]->Draw("colz");
+        sprintf(dName,"./Results/stdev/m/%i_%i_stdev_m_q%i_d%i.png",f,stoi(_run),j+1,k+1);
+        c1->SaveAs(dName);
+        c1->Clear();
+        gainp[j][k]->Draw("colz");
+        sprintf(dName,"./Results/gain/p/%i_%i_gain_p_q%i_d%i.png",f,stoi(_run),j+1,k+1);
+        c1->SaveAs(dName);
+        c1->Clear();
+        gainm[j][k]->Draw("colz");
+        sprintf(dName,"./Results/gain/m/%i_%i_gain_m_q%i_d%i.png",f,stoi(_run),j+1,k+1);
+        c1->SaveAs(dName);
+        c1->Clear();
+      }
     }
   }
 
@@ -641,7 +650,7 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       Ev[ieta+41][(iphi-1)/2][depth-1].resize(EventNumber);
       Ev[ieta+41][(iphi-1)/2][depth-1][EventNumber-1] = PulMax;
       //stdevm[depth-1]->Fill(ieta,iphi,psd[ieta+41][(iphi-1)/2][depth-1]->GetStdDev());
-      if(_mode.length() == 4)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta+41][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
+      if(_verbosity == "v")cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta+41][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
     }
     else{
       AllSum[ieta-16][(iphi-1)/2][depth-1]->Fill(SumCharge);
@@ -649,7 +658,7 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       Ev[ieta-16][(iphi-1)/2][depth-1].resize(EventNumber);
       Ev[ieta-16][(iphi-1)/2][depth-1][EventNumber-1] = PulMax;
       //stdevp[depth-1]->Fill(ieta,iphi,psd[ieta-16][(iphi-1)/2][depth-1]->GetStdDev());
-      if(_mode.length() == 4)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta-16][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
+      if(_verbosity == "v")cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta-16][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
     }
   
   }
