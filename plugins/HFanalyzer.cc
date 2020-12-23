@@ -428,10 +428,10 @@ HFanalyzer::~HFanalyzer()
             if(i<13) {sprintf(dName,"Q%iHFM/EventByEvent",j/9+1);}
             else {sprintf(dName,"Q%iHFP/EventByEvent",j/9+1);}
             _file[f]->cd(dName);
-            EvByEv[f][i][j][k]->SetXTitle("Event");
-            EvByEv[f][i][j][k]->SetYTitle("Peak Charge (fC)");
-            EvByEv[f][i][j][k]->SetMinimum(0.);
-            EvByEv[f][i][j][k]->Write();
+            //EvByEv[f][i][j][k]->SetXTitle("Event");
+            //EvByEv[f][i][j][k]->SetYTitle("Peak Charge (fC)");
+            //EvByEv[f][i][j][k]->SetMinimum(0.);
+            //EvByEv[f][i][j][k]->Write();
             //fit = new TF1("fit","gaus",-20.,20.);
             //psd[i][j][k]->Fit("fit","Q");
             gain = AllSum[f][i][j][k]->GetMean()/(1.05*1.602e-4*Ped[f][i][j][k]->GetMean()*Ped[f][i][j][k]->GetMean()/(Ped[f][i][j][k]->GetStdDev()*Ped[f][i][j][k]->GetStdDev()));
@@ -587,7 +587,7 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     DetId detid = qie10df.detid();
     HcalDetId hcaldetid = HcalDetId(detid);
 
-    int f = !(_mode==6)*(EventNumber%_eps);
+    int f = (_mode==6)*(EventNumber/_eps);
     int depth = hcaldetid.depth(); 
     int ieta = hcaldetid.ieta();
     int iphi = hcaldetid.iphi();
