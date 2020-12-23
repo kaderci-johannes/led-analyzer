@@ -91,13 +91,12 @@ nsteps = int(sys.argv[5%len(sys.argv)])			# Number of steps to be processed.
 
 process.hcalAnalyzer = cms.EDAnalyzer('HFanalyzer',
         OutFileName = cms.untracked.string('HFP5comm_'+runNumber),
-	Verbosity = cms.untracked.string(verbosity),
-        Mode = cms.untracked.string(len(sys.argv)),
-	Eps = cms.untracked.int32(eps),
-	Nsteps = cms.untracked.int32(nsteps),
-        Suite_Code = cms.untracked.int32(suite_code),
+	Verbosity = cms.untracked.int32(verbosity),
+#        Mode = cms.untracked.int32(len(sys.argv)),
 	Run = cms.untracked.string(runNumber),
-        Sequencer_Flag = cms.untracked.int32(0)
+#	Eps = cms.untracked.int32(eps),
+#	Nsteps = cms.untracked.int32(nsteps),
+        Suite_Code = cms.untracked.int32(suite_code)
 )
 
 #
