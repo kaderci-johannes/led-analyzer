@@ -9,7 +9,7 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1+2*(4==len(sys.argv[3]))))
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(400))
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(30000))
 
 #
 #   Command Line Input(Copied from DQM for now)
@@ -93,12 +93,12 @@ except ValueError:
 #    sequencer_flag = int(sys.argv[4])
 
 process.hcalAnalyzer = cms.EDAnalyzer('HFanalyzer',
-        OutFileName = cms.untracked.string('HFP5comm_'+runNumber+'.root'),
+        OutFileName = cms.untracked.string('HFP5comm_'+runNumber),
 	Verbosity = cms.untracked.int32(verbosity),
-#	Mode = cms.untracked.int32(len(sys.argv)),
+	Mode = cms.untracked.int32(len(sys.argv)),
 	Run = cms.untracked.string(runNumber),
-#	Eps = cms.untracked.int32(eps),
-#	Nsteps = cms.untracked.int32(nsteps),
+	Eps = cms.untracked.int32(eps),
+	Nsteps = cms.untracked.int32(nsteps),
         Suite_Code = cms.untracked.int32(suite_code)
 )
 
