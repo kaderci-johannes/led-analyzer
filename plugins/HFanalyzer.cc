@@ -219,7 +219,7 @@ private:
   edm::EDGetTokenT<HFDigiCollection> hf_token;
 
   //Slow data stuffs - raw_toiken is slow data
-  bool _sequencer_flag;
+  //bool _sequencer_flag;
   edm::EDGetTokenT<FEDRawDataCollection> raw_token;
   edm::Handle<FEDRawDataCollection> raw_collection;
 
@@ -233,13 +233,12 @@ private:
 HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
   _outFileName(iConfig.getUntrackedParameter<string>("OutFileName")),
   _verbosity(iConfig.getUntrackedParameter<int>("Verbosity")),
-  _run(iConfig.getUntrackedParameter<string>("Run")),
-  _sequencer_flag(iConfig.getUntrackedParameter<int>("Sequencer_Flag"))
+  _run(iConfig.getUntrackedParameter<string>("Run"))
+  /*_sequencer_flag(iConfig.getUntrackedParameter<int>("Sequencer_Flag"))*/
 { 
 
   char hName[1024], hTitle[1024], dName[1024];	// Histogram name, histogram title and directory name.
   
-
   EventNumber = 0;
 
   _file = new TFile(_outFileName.c_str(), "recreate");
