@@ -243,7 +243,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
   /*_eps(iConfig.getUntrackedParameter<int>("Eps"))*/
   /*_nsteps(iConfig.getUntrackedParameter<int>("Nsteps"))*/
 {
-  cout<<"Constructor"<<endl<<endl;
+  cout<<endl<<endl<<"Constructor"<<endl;
 
   char hName[1024], hTitle[1024], dName[1024];	// Histogram name, histogram title and directory name.
   
@@ -374,7 +374,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
 
 HFanalyzer::~HFanalyzer()
 {
-  cout<<"Destructor"<<endl<<endl;
+  cout<<endl<<endl<<"Destructor"<<endl;
   int chan=1;
   double gain;
   char hName[1024], hTitle[1024], dName[1024];
@@ -566,6 +566,7 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   using namespace edm;
 
   EventNumber++;
+  int f = (_mode==6)*((EventNumber-1)/_eps);
 
   //
   //  Extracting All the Collections containing useful Info
@@ -581,17 +582,23 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   float SumCharge;
   float PedCharge;
   float PulMax;
+
+  if((EventNumber-2)%_eps==0) cout<<f<<" "<<EventNumber<<endl;
+  if((EventNumber-1)%_eps==0) cout<<f<<" "<<EventNumber<<endl;
+  if(EventNumber%_eps==0) cout<<f<<" "<<EventNumber<<endl;
+  if((EventNumber+1)%_eps==0) cout<<f<<" "<<EventNumber<<endl;
+
   for (unsigned int j=0; j < qie10dc.size(); j++){
 
     QIE10DataFrame qie10df = static_cast<QIE10DataFrame>(qie10dc[j]);
     DetId detid = qie10df.detid();
     HcalDetId hcaldetid = HcalDetId(detid);
 
-    int f = (_mode==6)*((EventNumber-1)/_eps);
     int depth = hcaldetid.depth(); 
     int ieta = hcaldetid.ieta();
     int iphi = hcaldetid.iphi();
     int nTS  = qie10df.samples();
+//if((EventNumber<10 || EventNumber>29990) && depth==1 && ieta==30 && iphi==1) cout<<f<<" "<<EventNumber<<endl;
 
     //How to extract information per time slice (nTS) and how to sum up the total charge in 10 ts
 

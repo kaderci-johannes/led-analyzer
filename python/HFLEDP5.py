@@ -8,7 +8,12 @@ process = cms.Process("ReflectionAnalysis")
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1+((len(sys.argv)==6)*int(sys.argv[4])*int(sys.argv[5])+1)))
+narg = len(sys.argv)
+
+if(narg==6):
+	process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(int(sys.argv[4])*int(sys.argv[5])))
+else:
+	process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1))
 
 #
 #   Command Line Input(Copied from DQM for now)
