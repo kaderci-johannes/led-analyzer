@@ -587,7 +587,7 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     DetId detid = qie10df.detid();
     HcalDetId hcaldetid = HcalDetId(detid);
 
-    int f = (_mode==6)*(EventNumber/_eps);
+    int f = (_mode==6)*((EventNumber-1)/_eps);
     int depth = hcaldetid.depth(); 
     int ieta = hcaldetid.ieta();
     int iphi = hcaldetid.iphi();
