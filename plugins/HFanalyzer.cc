@@ -281,8 +281,13 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
       _file[f]->mkdir(dName);
       sprintf(dName,"Q%iHFM/PSD",i+1);
       _file[f]->mkdir(dName);
-      sprintf(dName,"Q%iHFM/EventByEvent",i+1);
+      if(_nsteps>1){
+        sprintf(dName,"Q%iHFM/EventByEventStep%i",i+1,f);
+        _file[f]->mkdir(dName);
+      }
+      sprintf(dName,"Q%iHFM/EventByEvent_All",i+1);
       _file[f]->mkdir(dName);
+
       sprintf(dName,"Q%iHFP/AllSumCh",i+1);
       _file[f]->mkdir(dName);
       sprintf(dName,"Q%iHFP/Ped",i+1);
@@ -291,8 +296,14 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
       _file[f]->mkdir(dName);
       sprintf(dName,"Q%iHFP/PSD",i+1);
       _file[f]->mkdir(dName);
-      sprintf(dName,"Q%iHFP/EventByEvent",i+1);
+      if(_nsteps>1){
+        sprintf(dName,"Q%iHFP/EventByEventStep%i",i+1,f);
+        _file[f]->mkdir(dName);
+      }
+      sprintf(dName,"Q%iHFP/EventByEvent_All",i+1);
       _file[f]->mkdir(dName);
+      //sprintf(dName,"Q%iHFP/EventByEvent",i+1);
+      //_file[f]->mkdir(dName);
     }
   }
 
@@ -445,13 +456,22 @@ HFanalyzer::~HFanalyzer()
             psd[f][i][j][k]->SetYTitle("Mean ADC");
             psd[f][i][j][k]->SetMinimum(0.);
             psd[f][i][j][k]->Write();
-            if(i<13) {sprintf(dName,"Q%iHFM/EventByEvent",j/9+1);}
-            else {sprintf(dName,"Q%iHFP/EventByEvent",j/9+1);}
-            _file[f]->cd(dName);
-            //EvByEv[f][i][j][k]->SetXTitle("Event");
-            //EvByEv[f][i][j][k]->SetYTitle("Peak Charge (fC)");
-            //EvByEv[f][i][j][k]->SetMinimum(0.);
-            //EvByEv[f][i][j][k]->Write();
+            if(_nsteps>1){
+              if(i<13) sprintf(dName,"Q%iHFM/EventByEventStep%i",j/9+1,f);
+              else sprintf(dName,"Q%iHFP/EventByEventStep%i",j/9+1,f);
+              _file[f]->cd(dName);
+              EvByEv[f][i][j][k]->SetXTitle("Event");
+              EvByEv[f][i][j][k]->SetYTitle("Peak Charge (fC)");
+              EvByEv[f][i][j][k]->SetMinimum(0.);
+              EvByEv[f][i][j][k]->Write();
+            }
+            if(i<13) sprintf(dName,"Q%iHFM/EventByEvent_All",j/9+1);
+            else sprintf(dName,"Q%iHFP/EventByEvent_All",j/9+1);
+              _file[f]->cd(dName);
+              EvByEvAll[i][j][k]->SetXTitle("Event");
+              EvByEvAll[i][j][k]->SetYTitle("Peak Charge (fC)");
+              EvByEvAll[i][j][k]->SetMinimum(0.);
+              EvByEvAll[i][j][k]->Write();
             //fit = new TF1("fit","gaus",-20.,20.);
             //psd[i][j][k]->Fit("fit","Q");
             gain = AllSum[f][i][j][k]->GetMean()/(1.05*1.602e-4*Ped[f][i][j][k]->GetMean()*Ped[f][i][j][k]->GetMean()/(Ped[f][i][j][k]->GetStdDev()*Ped[f][i][j][k]->GetStdDev()));
