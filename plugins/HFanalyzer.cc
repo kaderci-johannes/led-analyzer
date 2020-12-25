@@ -168,13 +168,14 @@ static const float adc2fC[128]={-0.5,0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5,9.5, 10
 
 
 int EventNumber;
-const int _nsteps = 15;
+const int _nsteps = 19;
 const int _eps = 2000;
 TFile *_file[_nsteps];
 
 TH1F *AllSum[_nsteps][iETAe][iPHIe][nD];			// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (LED)
 TH1F *Ped[_nsteps][iETAe][iPHIe][nD];			// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (Pedestal)
 TProfile *psd[_nsteps][iETAe][iPHIe][nD];		// An array of profile histograms that contain pulse shape distributions. x axis: Time slice, y: Average ADC, y_err: STDEV ADC
+TProfile *EvByEvAll[iETAe][iPHIe][nD];
 TProfile *EvByEv[_nsteps][iETAe][iPHIe][nD];		// An array of profile histograms that contain the peak charge of each event. x axis: Event number, y: Peak charge
 TProfile2D *hfp[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Mean charge
 TProfile2D *hfm[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: Mean charge
@@ -374,30 +375,49 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
 
 HFanalyzer::~HFanalyzer()
 {
-  cout<<endl<<endl<<"Destructor"<<endl;
+  cout<<endl<<"Destructor"<<endl<<endl;
   int chan=1;
   double gain;
   char hName[1024], hTitle[1024], dName[1024];
 
-  for(int f=0;f<_nsteps;f++){
-    cout<<"EvByEv file: "<<f<<endl;
-    for(int i=0;i<iETAe;i++){
-      for(int j=0;j<iPHIe;j++){
-        for(int k=0;k<nD;k++){
-          if(i<13){
-            sprintf(hName,"PeakQ_m%i_%i_%i",41-i,2*j+1,k+1);
-            sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i-41,2*j+1,k+1);
+  if(_nsteps>1){
+    for(int f=0;f<_nsteps;f++){
+      for(int i=0;i<iETAe;i++){
+        for(int j=0;j<iPHIe;j++){
+          for(int k=0;k<nD;k++){
+            if(i<13){
+              sprintf(hName,"PeakQ_m%i_%i_%i",41-i,2*j+1,k+1);
+              sprintf(hTitle,"Peak Charge (Step: %i, ieta: %i, iphi: %i, Depth: %i)",f,i-41,2*j+1,k+1);
+            }
+            else{
+              sprintf(hName,"PeakQ_p%i_%i_%i",i+16,2*j+1,k+1);
+              sprintf(hTitle,"Peak Charge (Step: %i, ieta: %i, iphi: %i, Depth: %i)",f,i+16,2*j+1,k+1);
+            }
+            EvByEv[f][i][j][k] = new TProfile(hName,hTitle,_eps,f*_eps+0.5,(f+1)*_eps+0.5);
+            if(Ev[i][j][k].size()>0) for(int l=f*_eps;l<(f+1)*_eps;l++) EvByEv[f][i][j][k]->Fill(l+1,Ev[i][j][k][l]);
           }
-          else{
-            sprintf(hName,"PeakQ_p%i_%i_%i",i+16,2*j+1,k+1);
-            sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
-          }
-          //EvByEv[f][i][j][k] = new TProfile(hName,hTitle,EventNumber,0.5,EventNumber+0.5);
-          //if(Ev[i][j][k].size()!=0) for(int l=0;l<EventNumber;l++) EvByEv[f][i][j][k]->Fill(l+1,Ev[i][j][k][l]);	/////////// !!!!!!!!!!!!!! FIX THIS !!!!!!!!!!!!!!! /////////////////
         }
       }
     }
   }
+
+  for(int i=0;i<iETAe;i++){
+    for(int j=0;j<iPHIe;j++){
+      for(int k=0;k<nD;k++){
+        if(i<13){
+          sprintf(hName,"PeakQ_m%i_%i_%i",41-i,2*j+1,k+1);
+          sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i-41,2*j+1,k+1);
+        }
+        else{
+          sprintf(hName,"PeakQ_p%i_%i_%i",i+16,2*j+1,k+1);
+          sprintf(hTitle,"Peak Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
+        }
+        EvByEvAll[i][j][k] = new TProfile(hName,hTitle,_eps,0.5,EventNumber+0.5);
+        if(Ev[i][j][k].size()>0) for(int l=0;l<EventNumber;l++) EvByEvAll[i][j][k]->Fill(l+1,Ev[i][j][k][l]);
+      }
+    }
+  }
+
 
   for(int f=0;f<_nsteps;f++){
     for(int i=0;i<iETAe;i++){
