@@ -168,7 +168,7 @@ static const float adc2fC[128]={-0.5,0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5,9.5, 10
 
 
 int EventNumber;
-const int _nsteps = 19;
+const int _nsteps = 10;
 const int _eps = 2000;
 TFile *_file[_nsteps];
 
@@ -244,7 +244,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
   /*_eps(iConfig.getUntrackedParameter<int>("Eps"))*/
   /*_nsteps(iConfig.getUntrackedParameter<int>("Nsteps"))*/
 {
-  cout<<endl<<endl<<"Constructor"<<endl;
+  cout<<endl<<endl<<"<HFanalyzer>"<<endl<<endl;
 
   char hName[1024], hTitle[1024], dName[1024];	// Histogram name, histogram title and directory name.
   
@@ -322,7 +322,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
             sprintf(hName,"SumCharge_p%i_%i_%i",i+16,2*j+1,k+1);
             sprintf(hTitle,"PMT Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
           }
-          AllSum[f][i][j][k] = new TH1F(hName,hTitle,1000,0,10000);
+          AllSum[f][i][j][k] = new TH1F(hName,hTitle,200,0,4000);
         }
       }
     }
@@ -381,12 +381,15 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
 
 // for histo stuff
   numChannels=0;
+
+cout<<endl<<endl<<"</HFanalyzer>"<<endl<<endl;
+
 }
 
 
 HFanalyzer::~HFanalyzer()
 {
-  cout<<endl<<"Destructor"<<endl<<endl;
+  cout<<endl<<endl<<"<~HFanalyzer>"<<endl<<endl;
   int chan=1;
   double gain;
   char hName[1024], hTitle[1024], dName[1024];
@@ -586,7 +589,7 @@ HFanalyzer::~HFanalyzer()
     _file[f]->Close();
   }
 
-
+  cout<<endl<<endl<<"</~HFanalyzer>"<<endl<<endl;
   /////////////////////////////////////
 }
 
