@@ -419,6 +419,7 @@ HFanalyzer::~HFanalyzer()
       }
     }
   }
+  cout<<"Event by event histograms (single step) filled"<<endl;
 
   for(int i=0;i<iETAe;i++){
     for(int j=0;j<iPHIe;j++){
@@ -436,7 +437,7 @@ HFanalyzer::~HFanalyzer()
       }
     }
   }
-
+  cout<<"Event by event histograms (all steps) filled"<<endl;
 
   for(int f=0;f<_nsteps;f++){
     for(int i=0;i<iETAe;i++){
@@ -503,6 +504,7 @@ HFanalyzer::~HFanalyzer()
       }
     }
   }
+  cout<<"1D histos written to file"<<endl;
 
   for(int f=0;f<_nsteps;f++){
     for(int j=0;j<nQ;j++){
@@ -558,6 +560,7 @@ HFanalyzer::~HFanalyzer()
       }
     }
   }
+  cout<<"2D histos written to file"<<endl;
 
   //gROOT->SetBatch(kTRUE);
   system("mkdir -p Results/mean/p Results/mean/m Results/stdev/p Results/stdev/m Results/gain/p Results/gain/m");
@@ -595,6 +598,7 @@ HFanalyzer::~HFanalyzer()
     _file[f]->Write();
     _file[f]->Close();
   }
+  cout<<"Files saved"<<endl;
 
   cout<<endl<<endl<<"</~HFanalyzer>"<<endl<<endl;
   /////////////////////////////////////
