@@ -173,10 +173,10 @@ const int _eps = 2000;
 TFile *_file[_nsteps];
 
 TH1F *AllSum[_nsteps][iETAe][iPHIe][nD];			// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (LED)
-TH1F *Ped[_nsteps][iETAe][iPHIe][nD];			// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (Pedestal)
-TProfile *psd[_nsteps][iETAe][iPHIe][nD];		// An array of profile histograms that contain pulse shape distributions. x axis: Time slice, y: Average ADC, y_err: STDEV ADC
+TH1F *Ped[_nsteps][iETAe][iPHIe][nD];				// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (Pedestal)
+TProfile *psd[_nsteps][iETAe][iPHIe][nD];			// An array of profile histograms that contain pulse shape distributions. x axis: Time slice, y: Average ADC, y_err: STDEV ADC
 TProfile *EvByEvAll[iETAe][iPHIe][nD];
-TProfile *EvByEv[_nsteps][iETAe][iPHIe][nD];		// An array of profile histograms that contain the peak charge of each event. x axis: Event number, y: Peak charge
+TProfile *EvByEv[_nsteps][iETAe][iPHIe][nD];			// An array of profile histograms that contain the peak charge of each event. x axis: Event number, y: Peak charge
 TProfile2D *hfp[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Mean charge
 TProfile2D *hfm[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: Mean charge
 TProfile2D *stdevp[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: Stdev of the pulse shape distribution.
@@ -306,6 +306,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
       //_file[f]->mkdir(dName);
     }
   }
+  cout<<"Folders created"<<endl;
 
   for(int f=0;f<_nsteps;f++) for(int i=0;i<iETAe;i++) for(int j=0;j<iPHIe;j++) for(int k=0;k<nD;k++) psd[f][i][j][k] = new TProfile;
  // This is needed for the psd[i][j][k]->GetEntries() that will come up not to crash. nTS is needed to define the # of bins and the x-axis range. Therefore, the ranges, etc. of psd[i][j][k] are defined in the HFanalyzer::analyze part.
@@ -322,11 +323,12 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
             sprintf(hName,"SumCharge_p%i_%i_%i",i+16,2*j+1,k+1);
             sprintf(hTitle,"PMT Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
           }
-          AllSum[f][i][j][k] = new TH1F(hName,hTitle,200,0,4000);
+          AllSum[f][i][j][k] = new TH1F(hName,hTitle,200,0,10000);
         }
       }
     }
   }
+  cout<<"AllSum histos declared"<<endl;
 
   for(int f=0;f<_nsteps;f++){
     for(int i=0;i<iETAe;i++){
@@ -340,11 +342,12 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
             sprintf(hName,"Ped_p%i_%i_%i",i+16,2*j+1,k+1);
             sprintf(hTitle,"Pedestal (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
           }
-          Ped[f][i][j][k] = new TH1F(hName,hTitle,100,0,1000);
+          Ped[f][i][j][k] = new TH1F(hName,hTitle,200,0,10000);
         }
       }
     }
   }
+  cout<<"Pedestal histos declared"<<endl;
 
   for(int f=0;f<_nsteps;f++){
     for(int j=0;j<nQ;j++){
@@ -370,6 +373,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
       }
     }
   }
+  cout<<"2D histos declared"<<endl;
 
   Ev.resize(iETAe);
   for(int i=0;i<iETAe;i++){
@@ -378,6 +382,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
       Ev[i][j].resize(nD);
     }
   }
+  cout<<"Event by event vector declared"<<endl;
 
 // for histo stuff
   numChannels=0;
@@ -443,14 +448,16 @@ HFanalyzer::~HFanalyzer()
             _file[f]->cd(dName);
             AllSum[f][i][j][k]->SetXTitle("Charge (fC)");
             AllSum[f][i][j][k]->SetYTitle("Counts");
-            AllSum[f][i][j][k]->SetMinimum(0.);
+            AllSum[f][i][j][k]->SetMinimum(.1);
+            AllSum[f][i][j][k]->GetXaxis()->SetRange(1,AllSum[f][i][j][k]->FindFirstBinAbove()+AllSum[f][i][j][k]->FindLastBinAbove()-1);
             AllSum[f][i][j][k]->Write();
             if(i<13) {sprintf(dName,"Q%iHFM/Ped",j/9+1);}
             else {sprintf(dName,"Q%iHFP/Ped",j/9+1);}
             _file[f]->cd(dName);
             Ped[f][i][j][k]->SetXTitle("Charge (fC)");
             Ped[f][i][j][k]->SetYTitle("Counts");
-            Ped[f][i][j][k]->SetMinimum(0.);
+            Ped[f][i][j][k]->SetMinimum(.1);
+            Ped[f][i][j][k]->GetXaxis()->SetRange(1,Ped[f][i][j][k]->FindFirstBinAbove()+Ped[f][i][j][k]->FindLastBinAbove()-1);
             Ped[f][i][j][k]->Write();
             if(i<13) {sprintf(dName,"Q%iHFM/PSD",j/9+1);}
             else {sprintf(dName,"Q%iHFP/PSD",j/9+1);}
