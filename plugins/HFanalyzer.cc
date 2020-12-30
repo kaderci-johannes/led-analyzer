@@ -323,7 +323,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
             sprintf(hName,"SumCharge_p%i_%i_%i",i+16,2*j+1,k+1);
             sprintf(hTitle,"PMT Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
           }
-          AllSum[f][i][j][k] = new TH1F(hName,hTitle,200,0,10000);
+          AllSum[f][i][j][k] = new TH1F(hName,hTitle,4096,0,10000);
         }
       }
     }
@@ -342,7 +342,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
             sprintf(hName,"Ped_p%i_%i_%i",i+16,2*j+1,k+1);
             sprintf(hTitle,"Pedestal (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
           }
-          Ped[f][i][j][k] = new TH1F(hName,hTitle,200,0,10000);
+          Ped[f][i][j][k] = new TH1F(hName,hTitle,4096,0,10000);
         }
       }
     }
