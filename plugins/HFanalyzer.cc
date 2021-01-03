@@ -263,6 +263,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
   hf_token = consumes<HFDigiCollection>(edm::InputTag("hcalDigis"));
   raw_token = consumes<FEDRawDataCollection>(edm::InputTag("source")); //Slow data
 
+  cout<<"Creating folders..";
   for(int f=0;f<_nsteps;f++){
     _file[f]->mkdir("Q1HFM");
     _file[f]->mkdir("Q2HFM");
@@ -306,11 +307,12 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
       //_file[f]->mkdir(dName);
     }
   }
-  cout<<"Folders created"<<endl;
+  cout<<"Done!"<<endl;
 
   for(int f=0;f<_nsteps;f++) for(int i=0;i<iETAe;i++) for(int j=0;j<iPHIe;j++) for(int k=0;k<nD;k++) psd[f][i][j][k] = new TProfile;
  // This is needed for the psd[i][j][k]->GetEntries() that will come up not to crash. nTS is needed to define the # of bins and the x-axis range. Therefore, the ranges, etc. of psd[i][j][k] are defined in the HFanalyzer::analyze part.
 
+  cout<<"Declaring AllSum histos..";
   for(int f=0;f<_nsteps;f++){
     for(int i=0;i<iETAe;i++){
       for(int j=0;j<iPHIe;j++){
@@ -323,13 +325,14 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
             sprintf(hName,"SumCharge_p%i_%i_%i",i+16,2*j+1,k+1);
             sprintf(hTitle,"PMT Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
           }
-          AllSum[f][i][j][k] = new TH1F(hName,hTitle,4096,0,10000);
+          AllSum[f][i][j][k] = new TH1F(hName,hTitle,32768,0,10000);
         }
       }
     }
   }
-  cout<<"AllSum histos declared"<<endl;
+  cout<<"Done!"<<endl;
 
+  cout<<"Declaring pedestal histos..";
   for(int f=0;f<_nsteps;f++){
     for(int i=0;i<iETAe;i++){
       for(int j=0;j<iPHIe;j++){
@@ -342,13 +345,14 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
             sprintf(hName,"Ped_p%i_%i_%i",i+16,2*j+1,k+1);
             sprintf(hTitle,"Pedestal (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
           }
-          Ped[f][i][j][k] = new TH1F(hName,hTitle,4096,0,10000);
+          Ped[f][i][j][k] = new TH1F(hName,hTitle,32768,0,10000);
         }
       }
     }
   }
-  cout<<"Pedestal histos declared"<<endl;
+  cout<<"Done!"<<endl;
 
+  cout<<"Declaring 2D histos..";
   for(int f=0;f<_nsteps;f++){
     for(int j=0;j<nQ;j++){
       for(int k=0;k<nD;k++){
@@ -373,8 +377,9 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
       }
     }
   }
-  cout<<"2D histos declared"<<endl;
+  cout<<"Done!"<<endl;
 
+  cout<<"Declaring event by event vector..";
   Ev.resize(iETAe);
   for(int i=0;i<iETAe;i++){
     Ev[i].resize(iPHIe);
@@ -382,7 +387,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
       Ev[i][j].resize(nD);
     }
   }
-  cout<<"Event by event vector declared"<<endl;
+  cout<<"Done!"<<endl;
 
 // for histo stuff
   numChannels=0;
@@ -450,15 +455,17 @@ HFanalyzer::~HFanalyzer()
             AllSum[f][i][j][k]->SetXTitle("Charge (fC)");
             AllSum[f][i][j][k]->SetYTitle("Counts");
             AllSum[f][i][j][k]->SetMinimum(.1);
-            AllSum[f][i][j][k]->GetXaxis()->SetRange(1,AllSum[f][i][j][k]->FindFirstBinAbove()+AllSum[f][i][j][k]->FindLastBinAbove()-1);
+            AllSum[f][i][j][k]->Rebin(pow(2,ceil(log((AllSum[f][i][j][k]->FindLastBinAbove()-AllSum[f][i][j][k]->FindFirstBinAbove())/sqrt(EventNumber/_nsteps))/log(2))));
+            AllSum[f][i][j][k]->GetXaxis()->SetRange(1,AllSum[f][i][j][k]->FindLastBinAbove()+AllSum[f][i][j][k]->FindFirstBinAbove()-1);
             AllSum[f][i][j][k]->Write();
-            if(i<13) {sprintf(dName,"Q%iHFM/Ped",j/9+1);}
-            else {sprintf(dName,"Q%iHFP/Ped",j/9+1);}
+            if(i<13) sprintf(dName,"Q%iHFM/Ped",j/9+1);
+            else sprintf(dName,"Q%iHFP/Ped",j/9+1);
             _file[f]->cd(dName);
             Ped[f][i][j][k]->SetXTitle("Charge (fC)");
             Ped[f][i][j][k]->SetYTitle("Counts");
             Ped[f][i][j][k]->SetMinimum(.1);
-            Ped[f][i][j][k]->GetXaxis()->SetRange(1,Ped[f][i][j][k]->FindFirstBinAbove()+Ped[f][i][j][k]->FindLastBinAbove()-1);
+            Ped[f][i][j][k]->Rebin(pow(2,ceil(log((Ped[f][i][j][k]->FindLastBinAbove()-Ped[f][i][j][k]->FindFirstBinAbove())/sqrt(EventNumber/_nsteps))/log(2))));
+            Ped[f][i][j][k]->GetXaxis()->SetRange(1,Ped[f][i][j][k]->FindLastBinAbove()+Ped[f][i][j][k]->FindFirstBinAbove()-1);
             Ped[f][i][j][k]->Write();
             if(i<13) {sprintf(dName,"Q%iHFM/PSD",j/9+1);}
             else {sprintf(dName,"Q%iHFP/PSD",j/9+1);}
