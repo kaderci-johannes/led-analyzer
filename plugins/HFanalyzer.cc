@@ -169,7 +169,6 @@ static const float adc2fC[128]={-0.5,0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5,9.5, 10
 
 int EventNumber;
 const int _nsteps = 10;
-const int _eps = 2000;
 TFile *_file[_nsteps];
 
 TH1F *AllSum[_nsteps][iETAe][iPHIe][nD];			// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (LED)
@@ -210,7 +209,7 @@ private:
   int _verbosity;
   int _mode;
   string _run;
-  //int _eps;
+  int _eps;
   //int _nsteps;
 
   virtual void beginRun(edm::Run const&, edm::EventSetup const&);
@@ -239,9 +238,9 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
   _outFileName(iConfig.getUntrackedParameter<string>("OutFileName")),
   _verbosity(iConfig.getUntrackedParameter<int>("Verbosity")),
   _mode(iConfig.getUntrackedParameter<int>("Mode")),
-  _run(iConfig.getUntrackedParameter<string>("Run"))
+  _run(iConfig.getUntrackedParameter<string>("Run")),
   /*_sequencer_flag(iConfig.getUntrackedParameter<int>("Sequencer_Flag")),*/
-  /*_eps(iConfig.getUntrackedParameter<int>("Eps"))*/
+  _eps(iConfig.getUntrackedParameter<int>("Eps"))
   /*_nsteps(iConfig.getUntrackedParameter<int>("Nsteps"))*/
 {
   cout<<endl<<endl<<"<HFanalyzer>"<<endl<<endl;
