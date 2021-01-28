@@ -171,7 +171,7 @@ int EventNumber;
 const int _nsteps = 10;
 TFile *_file[_nsteps];
 
-TH1F *AllSum[_nsteps][iETAe][iPHIe][nD];			// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (LED)
+vector<TH1F*> AllSum[iETAe][iPHIe][nD];				// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (LED)
 TH1F *Ped[_nsteps][iETAe][iPHIe][nD];				// A 1D histogram for each (ieta, iphi, depth). x axis: Charge, y axis: counts (Pedestal)
 TProfile *psd[_nsteps][iETAe][iPHIe][nD];			// An array of profile histograms that contain pulse shape distributions. x axis: Time slice, y: Average ADC, y_err: STDEV ADC
 TProfile *EvByEvAll[iETAe][iPHIe][nD];
@@ -315,10 +315,11 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
   // This is needed for the psd[i][j][k]->GetEntries() that will come up not to crash. nTS is needed to define the # of bins and the x-axis range. Therefore, the ranges, etc. of psd[i][j][k] are defined in the HFanalyzer::analyze part.
 
   cout<<"Declaring AllSum histos..";
-  for(int f=0;f<_nsteps;f++){
-    for(int i=0;i<iETAe;i++){
-      for(int j=0;j<iPHIe;j++){
-        for(int k=0;k<nD;k++){
+  for(int i=0;i<iETAe;i++){
+    for(int j=0;j<iPHIe;j++){
+      for(int k=0;k<nD;k++){
+        AllSum[i][j][k].resize(_nsteps);
+        for(int f=0;f<_nsteps;f++){
           if(i<13){
             sprintf(hName,"SumCharge_m%i_%i_%i",41-i,2*j+1,k+1);
             sprintf(hTitle,"PMT Charge (ieta: %i, iphi: %i, Depth: %i)",i-41,2*j+1,k+1);
@@ -327,7 +328,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
             sprintf(hName,"SumCharge_p%i_%i_%i",i+16,2*j+1,k+1);
             sprintf(hTitle,"PMT Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
           }
-          AllSum[f][i][j][k] = new TH1F(hName,hTitle,16384,0,10000);
+          AllSum[i][j][k][f] = new TH1F(hName,hTitle,16384,0,10000);
         }
       }
     }
@@ -461,19 +462,19 @@ HFanalyzer::~HFanalyzer()
     for(int i=0;i<iETAe;i++){
       for(int j=0;j<iPHIe;j++){
         for(int k=0;k<nD;k++){
-          if(AllSum[f][i][j][k]->GetEntries()!=0){
+          if(AllSum[i][j][k][f]->GetEntries()!=0){
             if(i<13) {sprintf(dName,"Q%iHFM/AllSumCh",j/9+1);}
             else {sprintf(dName,"Q%iHFP/AllSumCh",j/9+1);}
             _file[f]->cd(dName);
-            AllSum[f][i][j][k]->SetXTitle("Charge (fC)");
-            AllSum[f][i][j][k]->SetYTitle("Counts");
-            AllSum[f][i][j][k]->SetMinimum(.1);
-            AllSum[f][i][j][k]->Rebin(pow(2,ceil(log((AllSum[f][i][j][k]->FindLastBinAbove()-AllSum[f][i][j][k]->FindFirstBinAbove())/sqrt(EventNumber/_nsteps))/log(2))));
-            AllSum[f][i][j][k]->GetXaxis()->SetRange(1,AllSum[f][i][j][k]->FindLastBinAbove()+AllSum[f][i][j][k]->FindFirstBinAbove()-1);
-            AllSum[f][i][j][k]->Write();
-//            cout<<pow(AllSum[f][i][j][k]->GetMean(),2)/pow(AllSum[f][i][j][k]->GetStdDev(),2)<<endl;
-            npe[f]->Fill(pow(AllSum[f][i][j][k]->GetMean(),2)/pow(AllSum[f][i][j][k]->GetStdDev(),2));
-            gvsg[f]->Fill(pow(AllSum[f][i][j][k]->GetStdDev(),2)/(AllSum[f][i][j][k]->GetMean()*1.6021765e-4),pow(AllSum[(f+1)%_nsteps][i][j][k]->GetStdDev(),2)/(AllSum[(f+1)%_nsteps][i][j][k]->GetMean()*1.6021765e-4),1);
+            AllSum[i][j][k][f]->SetXTitle("Charge (fC)");
+            AllSum[i][j][k][f]->SetYTitle("Counts");
+            AllSum[i][j][k][f]->SetMinimum(.1);
+            AllSum[i][j][k][f]->Rebin(pow(2,ceil(log((AllSum[i][j][k][f]->FindLastBinAbove()-AllSum[i][j][k][f]->FindFirstBinAbove())/sqrt(EventNumber/_nsteps))/log(2))));
+            AllSum[i][j][k][f]->GetXaxis()->SetRange(1,AllSum[i][j][k][f]->FindLastBinAbove()+AllSum[i][j][k][f]->FindFirstBinAbove()-1);
+            AllSum[i][j][k][f]->Write();
+//            cout<<pow(AllSum[i][j][k][f]->GetMean(),2)/pow(AllSum[i][j][k][f]->GetStdDev(),2)<<endl;
+            npe[f]->Fill(pow(AllSum[i][j][k][f]->GetMean(),2)/pow(AllSum[i][j][k][f]->GetStdDev(),2));
+            gvsg[f]->Fill(pow(AllSum[i][j][k][f]->GetStdDev(),2)/(AllSum[i][j][k][f]->GetMean()*1.6021765e-4),pow(AllSum[(f+1)%_nsteps][i][j][k]->GetStdDev(),2)/(AllSum[(f+1)%_nsteps][i][j][k]->GetMean()*1.6021765e-4),1);
             if(i<13) sprintf(dName,"Q%iHFM/Ped",j/9+1);
             else sprintf(dName,"Q%iHFP/Ped",j/9+1);
             _file[f]->cd(dName);
@@ -508,15 +509,15 @@ HFanalyzer::~HFanalyzer()
               EvByEvAll[i][j][k]->Write();
             //fit = new TF1("fit","gaus",-20.,20.);
             //psd[i][j][k]->Fit("fit","Q");
-            gain = pow(AllSum[f][i][j][k]->GetStdDev(),2)/(AllSum[f][i][j][k]->GetMean()*1.6021765e-4);
+            gain = pow(AllSum[i][j][k][f]->GetStdDev(),2)/(AllSum[i][j][k][f]->GetMean()*1.6021765e-4);
             if(i<13){
-              hfm[f][j/9][k]->Fill(i-41,2*j+1,AllSum[f][i][j][k]->GetMean());
-              stdevm[f][j/9][k]->Fill(i-41,2*j+1,AllSum[f][i][j][k]->GetStdDev());
+              hfm[f][j/9][k]->Fill(i-41,2*j+1,AllSum[i][j][k][f]->GetMean());
+              stdevm[f][j/9][k]->Fill(i-41,2*j+1,AllSum[i][j][k][f]->GetStdDev());
               gainm[f][j/9][k]->Fill(i-41,2*j+1,gain);
             }
             else{
-              hfp[f][j/9][k]->Fill(i+16,2*j+1,AllSum[f][i][j][k]->GetMean());
-              stdevp[f][j/9][k]->Fill(i+16,2*j+1,AllSum[f][i][j][k]->GetStdDev());
+              hfp[f][j/9][k]->Fill(i+16,2*j+1,AllSum[i][j][k][f]->GetMean());
+              stdevp[f][j/9][k]->Fill(i+16,2*j+1,AllSum[i][j][k][f]->GetStdDev());
               gainp[f][j/9][k]->Fill(i+16,2*j+1,gain);
               //stdevp[k]->Fill(i+16,2*j+1,fit->GetParameter("Sigma"));
             }
@@ -740,20 +741,20 @@ void HFanalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     PedCharge*=nTS/2.;
 
     if(ieta<0){
-      AllSum[f][ieta+41][(iphi-1)/2][depth-1]->Fill(SumCharge);
+      AllSum[ieta+41][(iphi-1)/2][depth-1][f]->Fill(SumCharge);
       Ped[f][ieta+41][(iphi-1)/2][depth-1]->Fill(PedCharge);
       Ev[ieta+41][(iphi-1)/2][depth-1].resize(EventNumber);
       Ev[ieta+41][(iphi-1)/2][depth-1][EventNumber-1] = PulMax;
       //stdevm[depth-1]->Fill(ieta,iphi,psd[ieta+41][(iphi-1)/2][depth-1]->GetStdDev());
-      if(_verbosity)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[f][ieta+41][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
+      if(_verbosity)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta+41][(iphi-1)/2][depth-1][f]->GetName()<<" Charge: "<<SumCharge<<endl;
     }
     else{
-      AllSum[f][ieta-16][(iphi-1)/2][depth-1]->Fill(SumCharge);
+      AllSum[ieta-16][(iphi-1)/2][depth-1][f]->Fill(SumCharge);
       Ped[f][ieta-16][(iphi-1)/2][depth-1]->Fill(PedCharge);
       Ev[ieta-16][(iphi-1)/2][depth-1].resize(EventNumber);
       Ev[ieta-16][(iphi-1)/2][depth-1][EventNumber-1] = PulMax;
       //stdevp[depth-1]->Fill(ieta,iphi,psd[ieta-16][(iphi-1)/2][depth-1]->GetStdDev());
-      if(_verbosity)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[f][ieta-16][(iphi-1)/2][depth-1]->GetName()<<" Charge: "<<SumCharge<<endl;
+      if(_verbosity)cout<<ieta<<" "<<iphi<<" "<<depth<<" "<<AllSum[ieta-16][(iphi-1)/2][depth-1][f]->GetName()<<" Charge: "<<SumCharge<<endl;
     }
   
   }
