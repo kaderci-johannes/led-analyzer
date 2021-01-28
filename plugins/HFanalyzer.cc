@@ -183,6 +183,9 @@ TProfile2D *stdevm[_nsteps][4][nD];				// An array of 2D histograms for various 
 TProfile2D *gainp[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF+. x axis: ieta, y: iphi, z: PMT Gain
 TProfile2D *gainm[_nsteps][4][nD];				// An array of 2D histograms for various depths of HF-. x axis: ieta, y: iphi, z: PMT Gain
 
+TProfile2D *gvsg[_nsteps];
+TH1F *npe[_nsteps];
+
 vector<vector<vector<vector<double>>>> Ev;
 
 //TF1 *fit;					// Fit function for the pulse shape distribution.
@@ -324,7 +327,7 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
             sprintf(hName,"SumCharge_p%i_%i_%i",i+16,2*j+1,k+1);
             sprintf(hTitle,"PMT Charge (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
           }
-          AllSum[f][i][j][k] = new TH1F(hName,hTitle,32768,0,10000);
+          AllSum[f][i][j][k] = new TH1F(hName,hTitle,16384,0,10000);
         }
       }
     }
@@ -344,10 +347,21 @@ HFanalyzer::HFanalyzer(const edm::ParameterSet& iConfig) :
             sprintf(hName,"Ped_p%i_%i_%i",i+16,2*j+1,k+1);
             sprintf(hTitle,"Pedestal (ieta: %i, iphi: %i, Depth: %i)",i+16,2*j+1,k+1);
           }
-          Ped[f][i][j][k] = new TH1F(hName,hTitle,32768,0,10000);
+          Ped[f][i][j][k] = new TH1F(hName,hTitle,16384,0,10000);
         }
       }
     }
+  }
+  cout<<"Done!"<<endl;
+
+  cout<<"Declaring Gain and Npe histos..";
+  for(int f=0;f<_nsteps;f++){
+    sprintf(hName,"npe");
+    sprintf(hTitle,"Npe (Step: %i)",f);
+    npe[f] = new TH1F(hName,hTitle,4096,0,1000);
+    sprintf(hName,"gvsg");
+    sprintf(hTitle,"Gain vs. Gain (Steps: %i vs. %i)",f,f+1);
+    gvsg[f] = new TProfile2D(hName,hTitle,60,0.,5e5,60,0.,5e5);
   }
   cout<<"Done!"<<endl;
 
@@ -457,6 +471,9 @@ HFanalyzer::~HFanalyzer()
             AllSum[f][i][j][k]->Rebin(pow(2,ceil(log((AllSum[f][i][j][k]->FindLastBinAbove()-AllSum[f][i][j][k]->FindFirstBinAbove())/sqrt(EventNumber/_nsteps))/log(2))));
             AllSum[f][i][j][k]->GetXaxis()->SetRange(1,AllSum[f][i][j][k]->FindLastBinAbove()+AllSum[f][i][j][k]->FindFirstBinAbove()-1);
             AllSum[f][i][j][k]->Write();
+//            cout<<pow(AllSum[f][i][j][k]->GetMean(),2)/pow(AllSum[f][i][j][k]->GetStdDev(),2)<<endl;
+            npe[f]->Fill(pow(AllSum[f][i][j][k]->GetMean(),2)/pow(AllSum[f][i][j][k]->GetStdDev(),2));
+            gvsg[f]->Fill(pow(AllSum[f][i][j][k]->GetStdDev(),2)/(AllSum[f][i][j][k]->GetMean()*1.6021765e-4),pow(AllSum[(f+1)%_nsteps][i][j][k]->GetStdDev(),2)/(AllSum[(f+1)%_nsteps][i][j][k]->GetMean()*1.6021765e-4),1);
             if(i<13) sprintf(dName,"Q%iHFM/Ped",j/9+1);
             else sprintf(dName,"Q%iHFP/Ped",j/9+1);
             _file[f]->cd(dName);
@@ -491,7 +508,7 @@ HFanalyzer::~HFanalyzer()
               EvByEvAll[i][j][k]->Write();
             //fit = new TF1("fit","gaus",-20.,20.);
             //psd[i][j][k]->Fit("fit","Q");
-            gain = AllSum[f][i][j][k]->GetMean()/(1.05*1.602e-4*Ped[f][i][j][k]->GetMean()*Ped[f][i][j][k]->GetMean()/(Ped[f][i][j][k]->GetStdDev()*Ped[f][i][j][k]->GetStdDev()));
+            gain = pow(AllSum[f][i][j][k]->GetStdDev(),2)/(AllSum[f][i][j][k]->GetMean()*1.6021765e-4);
             if(i<13){
               hfm[f][j/9][k]->Fill(i-41,2*j+1,AllSum[f][i][j][k]->GetMean());
               stdevm[f][j/9][k]->Fill(i-41,2*j+1,AllSum[f][i][j][k]->GetStdDev());
@@ -509,6 +526,18 @@ HFanalyzer::~HFanalyzer()
         }
       }
     }
+    npe[f]->Rebin(pow(2,ceil(log((npe[f]->FindLastBinAbove()-npe[f]->FindFirstBinAbove())/sqrt(3456.))/log(2))));
+    npe[f]->GetXaxis()->SetRange(1,npe[f]->FindLastBinAbove()+npe[f]->FindFirstBinAbove()-1);
+    npe[f]->SetXTitle("N_{pe}");
+    npe[f]->SetYTitle("Counts");
+    sprintf(hTitle,"Gain (Step: %i)",f);
+    gvsg[f]->SetXTitle(hTitle);
+    sprintf(hTitle,"Gain (Step: %i)",(f+1)%_nsteps);
+    gvsg[f]->SetYTitle(hTitle);
+    gvsg[f]->SetStats(0);
+    _file[f]->cd();
+    npe[f]->Write();
+    gvsg[f]->Write();
   }
   cout<<"1D histos written to file"<<endl;
 
@@ -601,6 +630,9 @@ HFanalyzer::~HFanalyzer()
         c1->Clear();
       }
     }
+    gvsg[f]->Draw();
+    sprintf(dName,"./Results/gain/m/%i_compare_gains_%i_vs_%i.png",stoi(_run),(f+1)%_nsteps,f);
+    c1->SaveAs(dName);
     _file[f]->Write();
     _file[f]->Close();
   }
